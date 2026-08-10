@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#AEE6FF">
+<title>Conteo de Sílabas</title>
+<style>
+/* ============================================
+   ABECEDARIO INTERACTIVO - ESTILOS
+   Educación Parvularia - Diseño infantil
+   ============================================ */
+
+/* --- Fuente Century Gothic con alternativas similares --- */
+@font-face {
+  font-family: 'Century Gothic Fallback';
+  src: local('Century Gothic'), local('CenturyGothic');
+}
+
+:root {
+  color-scheme: light;
+  --fuente-principal: 'Century Gothic', 'Century Gothic Fallback', 'Futura', 'Trebuchet MS', 'Verdana', sans-serif;
+
+  /* Paleta infantil */
+  --celeste: #5AC8FA;
+  --amarillo: #FFD93D;
+  --verde: #6BCB77;
+  --rosado: #FF8FB1;
+  --naranjo: #FFA552;
+  --lila: #C89CFA;
+  --turquesa: #4DD0C9;
+
+  --fondo-cielo-1: #AEE6FF;
+  --fondo-cielo-2: #E8F7FF;
+
+  --texto-oscuro: #3A3A4A;
+  --blanco: #FFFFFF;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  font-family: var(--fuente-principal);
+  background: linear-gradient(160deg, var(--fondo-cielo-1) 0%, var(--fondo-cielo-2) 60%, #FFF6E0 100%);
+  color: var(--texto-oscuro);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+button {
+  font-family: var(--fuente-principal);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+/* ============================================
+   FONDO DECORATIVO (nubes, estrellas, confeti)
+   ============================================ */
+.fondo-decorativo {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nube {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  filter: blur(1px);
+  opacity: 0.9;
+  animation: flotarNube 26s ease-in-out infinite;
+}
+.nube::before, .nube::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+}
+.nube1 { width: 120px; height: 45px; top: 8%; left: -10%; animation-duration: 32s; }
+.nube1::before { width: 60px; height: 60px; top: -30px; left: 15px; }
+.nube1::after { width: 70px; height: 50px; top: -18px; left: 55px; }
+
+.nube2 { width: 90px; height: 35px; top: 22%; left: 60%; animation-duration: 40s; animation-delay: -8s; }
+.nube2::before { width: 45px; height: 45px; top: -22px; left: 10px; }
+.nube2::after { width: 55px; height: 40px; top: -14px; left: 40px; }
+
+.nube3 { width: 100px; height: 38px; top: 65%; left: -15%; animation-duration: 36s; animation-delay: -15s; }
+.nube3::before { width: 50px; height: 50px; top: -25px; left: 12px; }
+.nube3::after { width: 60px; height: 42px; top: -15px; left: 45px; }
+
+@keyframes flotarNube {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(60vw); }
+  100% { transform: translateX(0); }
+}
+
+.estrella {
+  position: absolute;
+  font-size: 1.6rem;
+  opacity: 0.7;
+  animation: parpadear 3.2s ease-in-out infinite;
+}
+.estrella1 { top: 14%; right: 12%; animation-delay: 0s; }
+.estrella2 { top: 40%; left: 6%; animation-delay: 1s; font-size: 1.2rem; }
+.estrella3 { bottom: 18%; right: 20%; animation-delay: 2s; font-size: 1.3rem; }
+
+@keyframes parpadear {
+  0%, 100% { opacity: 0.3; transform: scale(0.9) rotate(0deg); }
+  50% { opacity: 0.9; transform: scale(1.15) rotate(15deg); }
+}
+
+.forma {
+  position: absolute;
+  border-radius: 40%;
+  opacity: 0.25;
+  animation: girarSuave 22s linear infinite;
+}
+.forma1 { width: 70px; height: 70px; background: var(--rosado); top: 75%; left: 10%; }
+.forma2 { width: 50px; height: 50px; background: var(--lila); top: 12%; left: 35%; animation-duration: 18s; }
+.forma3 { width: 60px; height: 60px; background: var(--turquesa); bottom: 8%; right: 8%; animation-duration: 26s; }
+
+@keyframes girarSuave {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   BARRA SUPERIOR
+   ============================================ */
+.barra-superior {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.btn-superior {
+  background: var(--blanco);
+  color: var(--texto-oscuro);
+  font-weight: bold;
+  font-size: clamp(0.85rem, 2vw, 1.05rem);
+  padding: 10px 18px;
+  border-radius: 50px;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.12), 0 6px 14px rgba(0,0,0,0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-superior:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+
+.btn-superior:active {
+  transform: translateY(2px) scale(0.97);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.12), 0 3px 8px rgba(0,0,0,0.08);
+}
+
+/* ============================================
+   PANTALLAS GENERALES
+   ============================================ */
+.pantalla {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: apareceSuave 0.6s ease;
+}
+
+.pantalla[hidden] {
+  display: none;
+}
+
+@keyframes apareceSuave {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============================================
+   PANTALLA 1: BIENVENIDA
+   ============================================ */
+.contenido-bienvenida {
+  text-align: center;
+  max-width: 700px;
+}
+
+.titulo-bienvenida {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 0 0 10px 0;
+  font-size: clamp(2.5rem, 9vw, 4.5rem);
+}
+
+.letra-flotante {
+  display: inline-block;
+  animation: rebotarLetra 2.4s ease-in-out infinite;
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.08);
+}
+.letra-flotante.l1 { color: var(--rosado); animation-delay: 0s; }
+.letra-flotante.l2 { color: var(--amarillo); animation-delay: 0.25s; }
+.letra-flotante.l3 { color: var(--celeste); animation-delay: 0.5s; }
+
+@keyframes rebotarLetra {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-16px) rotate(3deg); }
+}
+
+.pregunta-bienvenida {
+  font-size: clamp(1.2rem, 4vw, 1.9rem);
+  font-weight: bold;
+  color: var(--texto-oscuro);
+  margin: 10px 0 34px 0;
+}
+
+.botones-formato {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-formato {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(220px, 100%);
+  padding: 28px 20px;
+  border-radius: 32px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--blanco);
+  box-shadow: 0 8px 0 rgba(0,0,0,0.15), 0 12px 24px rgba(0,0,0,0.15);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.emoji-boton {
+  font-size: 2.4rem;
+}
+
+.ejemplo-formato {
+  font-size: 1rem;
+  font-weight: normal;
+  opacity: 0.9;
+}
+
+.btn-mayusculas {
+  background: linear-gradient(160deg, var(--verde), #4CAF6D);
+}
+
+.btn-minusculas {
+  background: linear-gradient(160deg, var(--celeste), #3AA6E0);
+}
+
+.btn-formato:hover {
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: 0 10px 0 rgba(0,0,0,0.15), 0 16px 28px rgba(0,0,0,0.18);
+}
+
+.btn-formato:active,
+.btn-formato.tocando {
+  transform: translateY(4px) scale(0.96);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.15), 0 6px 14px rgba(0,0,0,0.15);
+}
+
+/* ============================================
+   PANTALLA 2: ABECEDARIO
+   ============================================ */
+.pantalla-abecedario {
+  flex-direction: column;
+  padding-top: 100px;
+  align-items: stretch;
+}
+
+.titulo-abecedario {
+  text-align: center;
+  font-size: clamp(1.3rem, 4vw, 2rem);
+  color: var(--texto-oscuro);
+  margin: 0 0 20px 0;
+}
+
+.grid-abecedario {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 18px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+/* --- Burbuja de letra --- */
+.burbuja-letra {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(2.4rem, 7vw, 4.4rem);
+  font-weight: bold;
+  color: var(--blanco);
+  border: 5px solid var(--blanco);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.12), 0 10px 18px rgba(0,0,0,0.15);
+  animation: rebotarBurbuja 3.6s ease-in-out infinite;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  text-shadow: 1px 2px 2px rgba(0,0,0,0.15);
+  line-height: 1;
+  padding: 0 6%;
+}
+
+/* Letras dobles: CH necesita compactarse un poco (letras más anchas),
+   LL no necesita compresión (son letras angostas; comprimirlas las pega).
+   El margen opuesto al letter-spacing evita que el texto se corra del centro. */
+.texto-burbuja {
+  display: inline-block;
+}
+.burbuja-letra.par-ch .texto-burbuja {
+  letter-spacing: -0.04em;
+  margin-right: 0.04em;
+}
+.burbuja-letra.par-ll .texto-burbuja {
+  letter-spacing: 0.02em;
+  margin-right: -0.02em;
+}
+
+@keyframes rebotarBurbuja {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.burbuja-letra:hover {
+  transform: scale(1.1);
+  filter: brightness(1.08);
+  box-shadow: 0 8px 0 rgba(0,0,0,0.12), 0 14px 22px rgba(0,0,0,0.2);
+}
+
+.burbuja-letra:active,
+.burbuja-letra.tocando {
+  transform: scale(0.94);
+}
+
+/* Estado mientras suena el audio: brillo + pulso + agrandado */
+.burbuja-letra.hablando {
+  animation: pulsoHabla 0.6s ease-in-out infinite;
+  filter: brightness(1.25) saturate(1.3);
+  box-shadow: 0 0 0 6px rgba(255,255,255,0.55), 0 10px 24px rgba(0,0,0,0.25);
+  z-index: 2;
+}
+
+@keyframes pulsoHabla {
+  0%, 100% { transform: scale(1.12); }
+  50% { transform: scale(1.22); }
+}
+
+/* Colores variados para las burbujas (se asignan por índice vía nth-child) */
+.burbuja-letra:nth-child(7n+1) { background: linear-gradient(160deg, var(--celeste), #3AA6E0); }
+.burbuja-letra:nth-child(7n+2) { background: linear-gradient(160deg, var(--amarillo), #F2B705); }
+.burbuja-letra:nth-child(7n+3) { background: linear-gradient(160deg, var(--verde), #4CAF6D); }
+.burbuja-letra:nth-child(7n+4) { background: linear-gradient(160deg, var(--rosado), #E8608A); }
+.burbuja-letra:nth-child(7n+5) { background: linear-gradient(160deg, var(--naranjo), #E8843A); }
+.burbuja-letra:nth-child(7n+6) { background: linear-gradient(160deg, var(--lila), #A874E8); }
+.burbuja-letra:nth-child(7n+7) { background: linear-gradient(160deg, var(--turquesa), #2FB5AD); }
+
+/* Desfase de la animación de rebote para que no todas boten igual */
+.burbuja-letra:nth-child(2n) { animation-delay: 0.4s; }
+.burbuja-letra:nth-child(3n) { animation-delay: 0.8s; }
+.burbuja-letra:nth-child(5n) { animation-delay: 1.2s; }
+
+/* ============================================
+   RESPONSIVE
+   Columnas de la grilla del abecedario controladas
+   por cantidad fija (sin auto-fit/minmax):
+   - PC (> 900px): 6 columnas
+   - Tablets (601px - 900px): 5 columnas
+   - Celulares (361px - 600px): 4 columnas
+   - Celulares muy pequeños (<= 360px): 3 columnas
+   ============================================ */
+
+/* Tablets: 600px - 900px -> 5 columnas */
+@media (max-width: 900px) {
+  .pantalla {
+    padding: 20px;
+  }
+  .grid-abecedario {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+}
+
+/* Celulares: hasta 600px -> 4 columnas */
+@media (max-width: 600px) {
+  .pantalla {
+    padding: 16px;
+  }
+  .grid-abecedario {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .botones-formato {
+    flex-direction: column;
+    align-items: center;
+  }
+  .btn-formato {
+    width: min(240px, 100%);
+    padding: 22px 16px;
+  }
+  .barra-superior {
+    padding: 8px;
+    gap: 8px;
+  }
+  .pantalla-abecedario {
+    padding-top: 96px;
+  }
+}
+
+/* Celulares muy pequeños: hasta 360px -> 3 columnas */
+@media (max-width: 360px) {
+  .pantalla {
+    padding: 12px;
+  }
+  .grid-abecedario {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .burbuja-letra {
+    border-width: 3px;
+    font-size: clamp(1.9rem, 8.5vw, 2.6rem);
+  }
+  .burbuja-letra.par-ch .texto-burbuja {
+    letter-spacing: -0.04em;
+    margin-right: 0.04em;
+  }
+  .burbuja-letra.par-ll .texto-burbuja {
+    letter-spacing: 0.02em;
+    margin-right: -0.02em;
+  }
+  .btn-formato {
+    width: min(210px, 100%);
+    padding: 18px 14px;
+  }
+  .pantalla-abecedario {
+    padding-top: 88px;
+  }
+}
+
+/* Orientación horizontal con poca altura (celulares acostados) */
+@media (orientation: landscape) and (max-height: 500px) {
+  .pantalla {
+    padding: 14px;
+    min-height: auto;
+  }
+  .pantalla-abecedario {
+    padding-top: 70px;
+  }
+  .titulo-abecedario {
+    margin-bottom: 12px;
+  }
+  .grid-abecedario {
+    gap: 10px;
+  }
+  .titulo-bienvenida {
+    font-size: clamp(2rem, 7vw, 3rem);
+    margin-bottom: 6px;
+  }
+  .pregunta-bienvenida {
+    margin-bottom: 18px;
+  }
+  .btn-formato {
+    padding: 16px 18px;
+  }
+}
+
+
+.pantalla-juego { flex-direction: column; align-items: stretch; padding-top: 90px; }
+.barra-superior-juego {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; justify-content: center; padding: 12px;
+  background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(6px);
+}
+
+.titulo-juego { text-align: center; font-size: clamp(1.3rem, 4vw, 2rem); margin-bottom: 4px; }
+.subtitulo-juego { text-align: center; font-size: 1rem; opacity: 0.75; margin-bottom: 16px; max-width: 520px; margin-left:auto; margin-right:auto; }
+
+.zona-objetivo { text-align: center; margin-bottom: 20px; }
+#emojiObjetivo {
+  font-size: clamp(5rem, 20vw, 8rem);
+  display: inline-block;
+  animation: flotarObjetivo 3s ease-in-out infinite;
+  filter: drop-shadow(0 8px 10px rgba(0,0,0,0.15));
+}
+@keyframes flotarObjetivo {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+.emoji-exito { animation: saltoExito 0.6s ease; }
+@keyframes saltoExito {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.35) rotate(8deg); }
+  60% { transform: scale(0.95) rotate(-6deg); }
+  100% { transform: scale(1.1) rotate(0); }
+}
+
+#mensajeExito {
+  text-align: center; font-size: clamp(1.2rem, 4vw, 1.6rem); font-weight: bold;
+  color: #2E9E4F; margin: 10px 0 16px 0;
+}
+
+.zona-opciones { text-align: center; margin-bottom: 20px; }
+#opcionesNumeros {
+  display: flex; justify-content: center; align-items: center;
+  flex-wrap: nowrap; gap: 16px;
+  width: 100%; max-width: 680px; margin: 0 auto;
+  padding: 14px 12px;
+}
+.burbuja-numero {
+  width: 80px;
+  height: 80px;
+  font-size: 2.1rem;
+  flex-shrink: 0;
+  transition: width 0.15s ease, height 0.15s ease, font-size 0.15s ease;
+}
+.burbuja-letra.opcion-correcta {
+  box-shadow: 0 0 0 6px rgba(46,158,79,0.4), 0 8px 14px rgba(0,0,0,0.2) !important;
+}
+
+/* Zona de sílabas reveladas tras acertar */
+.zona-silabas { text-align: center; margin-bottom: 28px; }
+#silabasPalabra {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: 14px;
+  max-width: 700px; margin: 0 auto;
+}
+.contenedor-silaba {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  animation: apareceSilaba 0.4s ease;
+}
+@keyframes apareceSilaba {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.ficha-silaba {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 64px; padding: 14px 18px;
+  border-radius: 24px;
+  font-size: clamp(1.3rem, 4.5vw, 1.9rem);
+  font-family: var(--fuente-principal);
+  font-weight: bold; color: var(--blanco);
+  border: 4px solid var(--blanco);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.12), 0 10px 16px rgba(0,0,0,0.15);
+  text-shadow: 1px 2px 2px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.ficha-silaba:hover { transform: translateY(-3px); }
+.ficha-silaba:active { transform: translateY(2px); }
+.contenedor-silaba:nth-child(7n+1) .ficha-silaba { background: linear-gradient(160deg, var(--celeste), #3AA6E0); }
+.contenedor-silaba:nth-child(7n+2) .ficha-silaba { background: linear-gradient(160deg, var(--amarillo), #F2B705); }
+.contenedor-silaba:nth-child(7n+3) .ficha-silaba { background: linear-gradient(160deg, var(--verde), #4CAF6D); }
+.contenedor-silaba:nth-child(7n+4) .ficha-silaba { background: linear-gradient(160deg, var(--rosado), #E8608A); }
+.contenedor-silaba:nth-child(7n+5) .ficha-silaba { background: linear-gradient(160deg, var(--naranjo), #E8843A); }
+.numero-silaba {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  font-size: 0.85rem; font-weight: bold; color: var(--blanco);
+  background: linear-gradient(160deg, var(--verde), #4CAF6D);
+  border: 2px solid var(--blanco);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.12), 0 3px 6px rgba(0,0,0,0.15);
+}
+
+@keyframes sacudir {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px) rotate(-4deg); }
+  40% { transform: translateX(8px) rotate(4deg); }
+  60% { transform: translateX(-6px) rotate(-3deg); }
+  80% { transform: translateX(6px) rotate(3deg); }
+}
+.burbuja-letra.sacude { animation: sacudir 0.4s ease; }
+
+.botones-juego { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin: 14px 0 8px 0; }
+.btn-juego {
+  padding: 12px 22px; border-radius: 50px; font-weight: bold; font-size: 1rem;
+  color: var(--blanco); box-shadow: 0 4px 0 rgba(0,0,0,0.12), 0 6px 14px rgba(0,0,0,0.1);
+  transition: transform 0.15s ease;
+}
+.btn-juego:hover { transform: translateY(-2px); }
+.btn-escuchar { background: linear-gradient(160deg, var(--verde), #4CAF6D); }
+.btn-siguiente { background: linear-gradient(160deg, var(--lila), #A874E8); }
+
+.fila-selector-voz { display: flex; justify-content: center; margin-top: 16px; }
+.pildora-selector {
+  display: flex; align-items: center; gap: 8px; background: var(--blanco);
+  border-radius: 50px; padding: 8px 18px;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.08);
+}
+.pildora-selector .icono-voz { font-size: 1.1rem; }
+#selectorVoz {
+  border: none; background: transparent; font-family: var(--fuente-principal);
+  font-weight: bold; font-size: 0.85rem; color: var(--texto-oscuro); max-width: 240px; cursor: pointer;
+}
+#selectorVoz:focus { outline: none; }
+</style>
+</head>
+<body>
+
+  <div class="fondo-decorativo" aria-hidden="true">
+    <div class="nube nube1"></div><div class="nube nube2"></div><div class="nube nube3"></div>
+    <div class="estrella estrella1">⭐</div><div class="estrella estrella2">✨</div><div class="estrella estrella3">⭐</div>
+    <div class="forma forma1"></div><div class="forma forma2"></div><div class="forma forma3"></div>
+  </div>
+
+  <main class="pantalla pantalla-juego">
+    <header class="barra-superior-juego">
+      <a href="index.html" class="btn-superior" style="text-decoration:none; display:inline-block;">🏠 Inicio</a>
+    </header>
+    <h2 class="titulo-juego">🥁 Conteo de Sílabas</h2>
+    <p class="subtitulo-juego">Escucha la palabra y toca el número de sílabas que tiene</p>
+
+    <div class="zona-objetivo">
+      <span id="emojiObjetivo">🐱</span>
+    </div>
+
+    <div id="mensajeExito" hidden>🎉 ¡Muy bien! ¡Correcto! 🎉</div>
+
+    <div class="zona-opciones">
+      <div id="opcionesNumeros"></div>
+    </div>
+
+    <div class="zona-silabas" id="zonaSilabas" hidden>
+      <div id="silabasPalabra"></div>
+    </div>
+
+    <div class="botones-juego">
+      <button id="btnEscuchar" class="btn-juego btn-escuchar" type="button">🔊 Escuchar palabra</button>
+      <button id="btnSiguiente" class="btn-juego btn-siguiente" type="button">🔄 Siguiente palabra</button>
+    </div>
+    <div class="fila-selector-voz">
+      <div class="pildora-selector">
+        <span class="icono-voz">🔊</span>
+        <select id="selectorVoz"></select>
+      </div>
+    </div>
+  </main>
+
+  <script>
+const PALABRAS = [{"palabra": "gato", "emoji": "🐱", "silabas": ["ga", "to"], "n": 2}, {"palabra": "perro", "emoji": "🐶", "silabas": ["pe", "rro"], "n": 2}, {"palabra": "pato", "emoji": "🦆", "silabas": ["pa", "to"], "n": 2}, {"palabra": "oso", "emoji": "🐻", "silabas": ["o", "so"], "n": 2}, {"palabra": "vaca", "emoji": "🐮", "silabas": ["va", "ca"], "n": 2}, {"palabra": "chancho", "emoji": "🐷", "silabas": ["chan", "cho"], "n": 2}, {"palabra": "gallina", "emoji": "🐔", "silabas": ["ga", "lli", "na"], "n": 3}, {"palabra": "caballo", "emoji": "🐴", "silabas": ["ca", "ba", "llo"], "n": 3}, {"palabra": "cabra", "emoji": "🐐", "silabas": ["ca", "bra"], "n": 2}, {"palabra": "oveja", "emoji": "🐑", "silabas": ["o", "ve", "ja"], "n": 3}, {"palabra": "conejo", "emoji": "🐰", "silabas": ["co", "ne", "jo"], "n": 3}, {"palabra": "ratón", "emoji": "🐭", "silabas": ["ra", "tón"], "n": 2}, {"palabra": "león", "emoji": "🦁", "silabas": ["le", "ón"], "n": 2}, {"palabra": "tigre", "emoji": "🐯", "silabas": ["ti", "gre"], "n": 2}, {"palabra": "mono", "emoji": "🐵", "silabas": ["mo", "no"], "n": 2}, {"palabra": "elefante", "emoji": "🐘", "silabas": ["e", "le", "fan", "te"], "n": 4}, {"palabra": "jirafa", "emoji": "🦒", "silabas": ["ji", "ra", "fa"], "n": 3}, {"palabra": "cebra", "emoji": "🦓", "silabas": ["ce", "bra"], "n": 2}, {"palabra": "canguro", "emoji": "🦘", "silabas": ["can", "gu", "ro"], "n": 3}, {"palabra": "zorro", "emoji": "🦊", "silabas": ["zo", "rro"], "n": 2}, {"palabra": "lobo", "emoji": "🐺", "silabas": ["lo", "bo"], "n": 2}, {"palabra": "foca", "emoji": "🦭", "silabas": ["fo", "ca"], "n": 2}, {"palabra": "delfín", "emoji": "🐬", "silabas": ["del", "fín"], "n": 2}, {"palabra": "tiburón", "emoji": "🦈", "silabas": ["ti", "bu", "rón"], "n": 3}, {"palabra": "ballena", "emoji": "🐳", "silabas": ["ba", "lle", "na"], "n": 3}, {"palabra": "pulpo", "emoji": "🐙", "silabas": ["pul", "po"], "n": 2}, {"palabra": "cangrejo", "emoji": "🦀", "silabas": ["can", "gre", "jo"], "n": 3}, {"palabra": "abeja", "emoji": "🐝", "silabas": ["a", "be", "ja"], "n": 3}, {"palabra": "mariposa", "emoji": "🦋", "silabas": ["ma", "ri", "po", "sa"], "n": 4}, {"palabra": "araña", "emoji": "🕷️", "silabas": ["a", "ra", "ña"], "n": 3}, {"palabra": "hormiga", "emoji": "🐜", "silabas": ["hor", "mi", "ga"], "n": 3}, {"palabra": "caracol", "emoji": "🐌", "silabas": ["ca", "ra", "col"], "n": 3}, {"palabra": "gusano", "emoji": "🐛", "silabas": ["gu", "sa", "no"], "n": 3}, {"palabra": "pájaro", "emoji": "🐦", "silabas": ["pá", "ja", "ro"], "n": 3}, {"palabra": "búho", "emoji": "🦉", "silabas": ["bú", "ho"], "n": 2}, {"palabra": "águila", "emoji": "🦅", "silabas": ["á", "gui", "la"], "n": 3}, {"palabra": "rana", "emoji": "🐸", "silabas": ["ra", "na"], "n": 2}, {"palabra": "serpiente", "emoji": "🐍", "silabas": ["ser", "pien", "te"], "n": 3}, {"palabra": "cocodrilo", "emoji": "🐊", "silabas": ["co", "co", "dri", "lo"], "n": 4}, {"palabra": "tortuga", "emoji": "🐢", "silabas": ["tor", "tu", "ga"], "n": 3}, {"palabra": "pez", "emoji": "🐟", "silabas": ["pez"], "n": 1}, {"palabra": "camello", "emoji": "🐫", "silabas": ["ca", "me", "llo"], "n": 3}, {"palabra": "koala", "emoji": "🐨", "silabas": ["ko", "a", "la"], "n": 3}, {"palabra": "panda", "emoji": "🐼", "silabas": ["pan", "da"], "n": 2}, {"palabra": "hipopótamo", "emoji": "🦛", "silabas": ["hi", "po", "pó", "ta", "mo"], "n": 5}, {"palabra": "rinoceronte", "emoji": "🦏", "silabas": ["ri", "no", "ce", "ron", "te"], "n": 5}, {"palabra": "murciélago", "emoji": "🦇", "silabas": ["mur", "cié", "la", "go"], "n": 4}, {"palabra": "ardilla", "emoji": "🐿️", "silabas": ["ar", "di", "lla"], "n": 3}, {"palabra": "erizo", "emoji": "🦔", "silabas": ["e", "ri", "zo"], "n": 3}, {"palabra": "pavo", "emoji": "🦃", "silabas": ["pa", "vo"], "n": 2}, {"palabra": "cisne", "emoji": "🦢", "silabas": ["cis", "ne"], "n": 2}, {"palabra": "loro", "emoji": "🦜", "silabas": ["lo", "ro"], "n": 2}, {"palabra": "pingüino", "emoji": "🐧", "silabas": ["pin", "güi", "no"], "n": 3}, {"palabra": "langosta", "emoji": "🦞", "silabas": ["lan", "gos", "ta"], "n": 3}, {"palabra": "camarón", "emoji": "🦐", "silabas": ["ca", "ma", "rón"], "n": 3}, {"palabra": "manzana", "emoji": "🍏", "silabas": ["man", "za", "na"], "n": 3}, {"palabra": "plátano", "emoji": "🍌", "silabas": ["plá", "ta", "no"], "n": 3}, {"palabra": "naranja", "emoji": "🍊", "silabas": ["na", "ran", "ja"], "n": 3}, {"palabra": "uva", "emoji": "🍇", "silabas": ["u", "va"], "n": 2}, {"palabra": "sandía", "emoji": "🍉", "silabas": ["san", "dí", "a"], "n": 3}, {"palabra": "frutilla", "emoji": "🍓", "silabas": ["fru", "ti", "lla"], "n": 3}, {"palabra": "piña", "emoji": "🍍", "silabas": ["pi", "ña"], "n": 2}, {"palabra": "limón", "emoji": "🍋", "silabas": ["li", "món"], "n": 2}, {"palabra": "pera", "emoji": "🍐", "silabas": ["pe", "ra"], "n": 2}, {"palabra": "kiwi", "emoji": "🥝", "silabas": ["ki", "wi"], "n": 2}, {"palabra": "coco", "emoji": "🥥", "silabas": ["co", "co"], "n": 2}, {"palabra": "pan", "emoji": "🍞", "silabas": ["pan"], "n": 1}, {"palabra": "queso", "emoji": "🧀", "silabas": ["que", "so"], "n": 2}, {"palabra": "huevo", "emoji": "🥚", "silabas": ["hue", "vo"], "n": 2}, {"palabra": "leche", "emoji": "🥛", "silabas": ["le", "che"], "n": 2}, {"palabra": "miel", "emoji": "🍯", "silabas": ["miel"], "n": 1}, {"palabra": "arroz", "emoji": "🍚", "silabas": ["a", "rroz"], "n": 2}, {"palabra": "sopa", "emoji": "🍲", "silabas": ["so", "pa"], "n": 2}, {"palabra": "hamburguesa", "emoji": "🍔", "silabas": ["ham", "bur", "gue", "sa"], "n": 4}, {"palabra": "papas", "emoji": "🍟", "silabas": ["pa", "pas"], "n": 2}, {"palabra": "helado", "emoji": "🍦", "silabas": ["he", "la", "do"], "n": 3}, {"palabra": "torta", "emoji": "🎂", "silabas": ["tor", "ta"], "n": 2}, {"palabra": "galleta", "emoji": "🍪", "silabas": ["ga", "lle", "ta"], "n": 3}, {"palabra": "chocolate", "emoji": "🍫", "silabas": ["cho", "co", "la", "te"], "n": 4}, {"palabra": "dulce", "emoji": "🍬", "silabas": ["dul", "ce"], "n": 2}, {"palabra": "taco", "emoji": "🌮", "silabas": ["ta", "co"], "n": 2}, {"palabra": "zanahoria", "emoji": "🥕", "silabas": ["za", "na", "ho", "ria"], "n": 4}, {"palabra": "papa", "emoji": "🥔", "silabas": ["pa", "pa"], "n": 2}, {"palabra": "tomate", "emoji": "🍅", "silabas": ["to", "ma", "te"], "n": 3}, {"palabra": "cebolla", "emoji": "🧅", "silabas": ["ce", "bo", "lla"], "n": 3}, {"palabra": "ajo", "emoji": "🧄", "silabas": ["a", "jo"], "n": 2}, {"palabra": "brócoli", "emoji": "🥦", "silabas": ["bró", "co", "li"], "n": 3}, {"palabra": "pepino", "emoji": "🥒", "silabas": ["pe", "pi", "no"], "n": 3}, {"palabra": "pimentón", "emoji": "🫑", "silabas": ["pi", "men", "tón"], "n": 3}, {"palabra": "palta", "emoji": "🥑", "silabas": ["pal", "ta"], "n": 2}, {"palabra": "sal", "emoji": "🧂", "silabas": ["sal"], "n": 1}, {"palabra": "casa", "emoji": "🏠", "silabas": ["ca", "sa"], "n": 2}, {"palabra": "cama", "emoji": "🛏️", "silabas": ["ca", "ma"], "n": 2}, {"palabra": "silla", "emoji": "🪑", "silabas": ["si", "lla"], "n": 2}, {"palabra": "puerta", "emoji": "🚪", "silabas": ["puer", "ta"], "n": 2}, {"palabra": "ventana", "emoji": "🪟", "silabas": ["ven", "ta", "na"], "n": 3}, {"palabra": "espejo", "emoji": "🪞", "silabas": ["es", "pe", "jo"], "n": 3}, {"palabra": "ampolleta", "emoji": "💡", "silabas": ["am", "po", "lle", "ta"], "n": 4}, {"palabra": "reloj", "emoji": "⏱️", "silabas": ["re", "loj"], "n": 2}, {"palabra": "teléfono", "emoji": "📱", "silabas": ["te", "lé", "fo", "no"], "n": 4}, {"palabra": "televisor", "emoji": "📺", "silabas": ["te", "le", "vi", "sor"], "n": 4}, {"palabra": "radio", "emoji": "📻", "silabas": ["ra", "dio"], "n": 2}, {"palabra": "libro", "emoji": "📖", "silabas": ["li", "bro"], "n": 2}, {"palabra": "lápiz", "emoji": "✏️", "silabas": ["lá", "piz"], "n": 2}, {"palabra": "tijera", "emoji": "✂️", "silabas": ["ti", "je", "ra"], "n": 3}, {"palabra": "pintura", "emoji": "🎨", "silabas": ["pin", "tu", "ra"], "n": 3}, {"palabra": "mochila", "emoji": "🎒", "silabas": ["mo", "chi", "la"], "n": 3}, {"palabra": "paraguas", "emoji": "☂️", "silabas": ["pa", "ra", "guas"], "n": 3}, {"palabra": "llave", "emoji": "🔑", "silabas": ["lla", "ve"], "n": 2}, {"palabra": "candado", "emoji": "🔒", "silabas": ["can", "da", "do"], "n": 3}, {"palabra": "regalo", "emoji": "🎁", "silabas": ["re", "ga", "lo"], "n": 3}, {"palabra": "globo", "emoji": "🎈", "silabas": ["glo", "bo"], "n": 2}, {"palabra": "vela", "emoji": "🕯️", "silabas": ["ve", "la"], "n": 2}, {"palabra": "jabón", "emoji": "🧼", "silabas": ["ja", "bón"], "n": 2}, {"palabra": "toalla", "emoji": "🧻", "silabas": ["to", "a", "lla"], "n": 3}, {"palabra": "cepillo", "emoji": "🪥", "silabas": ["ce", "pi", "llo"], "n": 3}, {"palabra": "escoba", "emoji": "🧹", "silabas": ["es", "co", "ba"], "n": 3}, {"palabra": "balde", "emoji": "🪣", "silabas": ["bal", "de"], "n": 2}, {"palabra": "caja", "emoji": "📦", "silabas": ["ca", "ja"], "n": 2}, {"palabra": "bolsa", "emoji": "👜", "silabas": ["bol", "sa"], "n": 2}, {"palabra": "sombrero", "emoji": "🎩", "silabas": ["som", "bre", "ro"], "n": 3}, {"palabra": "corona", "emoji": "👑", "silabas": ["co", "ro", "na"], "n": 3}, {"palabra": "anillo", "emoji": "💍", "silabas": ["a", "ni", "llo"], "n": 3}, {"palabra": "moneda", "emoji": "🪙", "silabas": ["mo", "ne", "da"], "n": 3}, {"palabra": "zapato", "emoji": "👠", "silabas": ["za", "pa", "to"], "n": 3}, {"palabra": "pantalón", "emoji": "👖", "silabas": ["pan", "ta", "lón"], "n": 3}, {"palabra": "vestido", "emoji": "👗", "silabas": ["ves", "ti", "do"], "n": 3}, {"palabra": "chaqueta", "emoji": "🧥", "silabas": ["cha", "que", "ta"], "n": 3}, {"palabra": "gorro", "emoji": "🧢", "silabas": ["go", "rro"], "n": 2}, {"palabra": "bufanda", "emoji": "🧣", "silabas": ["bu", "fan", "da"], "n": 3}, {"palabra": "guante", "emoji": "🧤", "silabas": ["guan", "te"], "n": 2}, {"palabra": "calcetín", "emoji": "🧦", "silabas": ["cal", "ce", "tín"], "n": 3}, {"palabra": "anteojo", "emoji": "👓", "silabas": ["an", "te", "o", "jo"], "n": 4}, {"palabra": "sol", "emoji": "☀️", "silabas": ["sol"], "n": 1}, {"palabra": "luna", "emoji": "🌙", "silabas": ["lu", "na"], "n": 2}, {"palabra": "estrella", "emoji": "⭐", "silabas": ["es", "tre", "lla"], "n": 3}, {"palabra": "nube", "emoji": "☁️", "silabas": ["nu", "be"], "n": 2}, {"palabra": "lluvia", "emoji": "🌧️", "silabas": ["llu", "via"], "n": 2}, {"palabra": "nieve", "emoji": "❄️", "silabas": ["nie", "ve"], "n": 2}, {"palabra": "viento", "emoji": "🌬️", "silabas": ["vien", "to"], "n": 2}, {"palabra": "arcoíris", "emoji": "🌈", "silabas": ["ar", "co", "í", "ris"], "n": 4}, {"palabra": "rayo", "emoji": "⚡", "silabas": ["ra", "yo"], "n": 2}, {"palabra": "fuego", "emoji": "🔥", "silabas": ["fue", "go"], "n": 2}, {"palabra": "agua", "emoji": "💧", "silabas": ["a", "gua"], "n": 2}, {"palabra": "mar", "emoji": "🌊", "silabas": ["mar"], "n": 1}, {"palabra": "montaña", "emoji": "⛰️", "silabas": ["mon", "ta", "ña"], "n": 3}, {"palabra": "volcán", "emoji": "🌋", "silabas": ["vol", "cán"], "n": 2}, {"palabra": "isla", "emoji": "🏝️", "silabas": ["is", "la"], "n": 2}, {"palabra": "desierto", "emoji": "🏜️", "silabas": ["de", "sier", "to"], "n": 3}, {"palabra": "árbol", "emoji": "🌳", "silabas": ["ár", "bol"], "n": 2}, {"palabra": "rosa", "emoji": "🌹", "silabas": ["ro", "sa"], "n": 2}, {"palabra": "planta", "emoji": "🪴", "silabas": ["plan", "ta"], "n": 2}, {"palabra": "cactus", "emoji": "🌵", "silabas": ["cac", "tus"], "n": 2}, {"palabra": "semilla", "emoji": "🌱", "silabas": ["se", "mi", "lla"], "n": 3}, {"palabra": "roca", "emoji": "🪨", "silabas": ["ro", "ca"], "n": 2}, {"palabra": "tierra", "emoji": "🌍", "silabas": ["tie", "rra"], "n": 2}, {"palabra": "planeta", "emoji": "🪐", "silabas": ["pla", "ne", "ta"], "n": 3}, {"palabra": "cohete", "emoji": "🚀", "silabas": ["co", "he", "te"], "n": 3}, {"palabra": "auto", "emoji": "🚗", "silabas": ["au", "to"], "n": 2}, {"palabra": "bus", "emoji": "🚌", "silabas": ["bus"], "n": 1}, {"palabra": "camión", "emoji": "🚚", "silabas": ["ca", "mión"], "n": 2}, {"palabra": "bicicleta", "emoji": "🚲", "silabas": ["bi", "ci", "cle", "ta"], "n": 4}, {"palabra": "moto", "emoji": "🏍️", "silabas": ["mo", "to"], "n": 2}, {"palabra": "avión", "emoji": "✈️", "silabas": ["a", "vión"], "n": 2}, {"palabra": "barco", "emoji": "🚢", "silabas": ["bar", "co"], "n": 2}, {"palabra": "helicóptero", "emoji": "🚁", "silabas": ["he", "li", "cóp", "te", "ro"], "n": 5}, {"palabra": "taxi", "emoji": "🚕", "silabas": ["ta", "xi"], "n": 2}, {"palabra": "ambulancia", "emoji": "🚑", "silabas": ["am", "bu", "lan", "cia"], "n": 4}, {"palabra": "bombero", "emoji": "🧑‍🚒", "silabas": ["bom", "be", "ro"], "n": 3}, {"palabra": "tractor", "emoji": "🚜", "silabas": ["trac", "tor"], "n": 2}, {"palabra": "patineta", "emoji": "🛹", "silabas": ["pa", "ti", "ne", "ta"], "n": 4}, {"palabra": "carreta", "emoji": "🛒", "silabas": ["ca", "rre", "ta"], "n": 3}, {"palabra": "mano", "emoji": "✋", "silabas": ["ma", "no"], "n": 2}, {"palabra": "pie", "emoji": "🦶", "silabas": ["pie"], "n": 1}, {"palabra": "ojo", "emoji": "👁️", "silabas": ["o", "jo"], "n": 2}, {"palabra": "oreja", "emoji": "👂", "silabas": ["o", "re", "ja"], "n": 3}, {"palabra": "nariz", "emoji": "👃", "silabas": ["na", "riz"], "n": 2}, {"palabra": "boca", "emoji": "👄", "silabas": ["bo", "ca"], "n": 2}, {"palabra": "diente", "emoji": "🦷", "silabas": ["dien", "te"], "n": 2}, {"palabra": "pelo", "emoji": "💇", "silabas": ["pe", "lo"], "n": 2}, {"palabra": "dedo", "emoji": "👆", "silabas": ["de", "do"], "n": 2}, {"palabra": "brazo", "emoji": "💪", "silabas": ["bra", "zo"], "n": 2}, {"palabra": "corazón", "emoji": "❤️", "silabas": ["co", "ra", "zón"], "n": 3}, {"palabra": "cerebro", "emoji": "🧠", "silabas": ["ce", "re", "bro"], "n": 3}, {"palabra": "hueso", "emoji": "🦴", "silabas": ["hue", "so"], "n": 2}, {"palabra": "mamá", "emoji": "👩", "silabas": ["ma", "má"], "n": 2}, {"palabra": "papá", "emoji": "👨", "silabas": ["pa", "pá"], "n": 2}, {"palabra": "bebé", "emoji": "👶", "silabas": ["be", "bé"], "n": 2}, {"palabra": "niño", "emoji": "👦", "silabas": ["ni", "ño"], "n": 2}, {"palabra": "niña", "emoji": "👧", "silabas": ["ni", "ña"], "n": 2}, {"palabra": "abuelo", "emoji": "👴", "silabas": ["a", "bue", "lo"], "n": 3}, {"palabra": "abuela", "emoji": "👵", "silabas": ["a", "bue", "la"], "n": 3}, {"palabra": "familia", "emoji": "👨‍👩‍👧", "silabas": ["fa", "mi", "lia"], "n": 3}, {"palabra": "doctor", "emoji": "🧑‍⚕️", "silabas": ["doc", "tor"], "n": 2}, {"palabra": "profesor", "emoji": "🧑‍🏫", "silabas": ["pro", "fe", "sor"], "n": 3}, {"palabra": "chef", "emoji": "🧑‍🍳", "silabas": ["chef"], "n": 1}, {"palabra": "policía", "emoji": "👮", "silabas": ["po", "li", "cí", "a"], "n": 4}, {"palabra": "rey", "emoji": "🤴", "silabas": ["rey"], "n": 1}, {"palabra": "reina", "emoji": "👸", "silabas": ["rei", "na"], "n": 2}, {"palabra": "payaso", "emoji": "🤡", "silabas": ["pa", "ya", "so"], "n": 3}, {"palabra": "astronauta", "emoji": "🧑‍🚀", "silabas": ["as", "tro", "nau", "ta"], "n": 4}, {"palabra": "bailarina", "emoji": "💃", "silabas": ["bai", "la", "ri", "na"], "n": 4}, {"palabra": "pelota", "emoji": "⚽", "silabas": ["pe", "lo", "ta"], "n": 3}, {"palabra": "peluche", "emoji": "🧸", "silabas": ["pe", "lu", "che"], "n": 3}, {"palabra": "muñeca", "emoji": "🪆", "silabas": ["mu", "ñe", "ca"], "n": 3}, {"palabra": "cometa", "emoji": "🪁", "silabas": ["co", "me", "ta"], "n": 3}, {"palabra": "dado", "emoji": "🎲", "silabas": ["da", "do"], "n": 2}, {"palabra": "tambor", "emoji": "🥁", "silabas": ["tam", "bor"], "n": 2}, {"palabra": "guitarra", "emoji": "🎸", "silabas": ["gui", "ta", "rra"], "n": 3}, {"palabra": "piano", "emoji": "🎹", "silabas": ["pia", "no"], "n": 2}, {"palabra": "trompeta", "emoji": "🎺", "silabas": ["trom", "pe", "ta"], "n": 3}, {"palabra": "violín", "emoji": "🎻", "silabas": ["vio", "lín"], "n": 2}, {"palabra": "micrófono", "emoji": "🎤", "silabas": ["mi", "cró", "fo", "no"], "n": 4}, {"palabra": "cámara", "emoji": "📷", "silabas": ["cá", "ma", "ra"], "n": 3}, {"palabra": "pincel", "emoji": "🖌️", "silabas": ["pin", "cel"], "n": 2}, {"palabra": "crayón", "emoji": "🖍️", "silabas": ["cra", "yón"], "n": 2}, {"palabra": "bandera", "emoji": "🚩", "silabas": ["ban", "de", "ra"], "n": 3}, {"palabra": "medalla", "emoji": "🏅", "silabas": ["me", "da", "lla"], "n": 3}, {"palabra": "trofeo", "emoji": "🏆", "silabas": ["tro", "fe", "o"], "n": 3}, {"palabra": "columpio", "emoji": "🛝", "silabas": ["co", "lum", "pio"], "n": 3}, {"palabra": "patín", "emoji": "⛸️", "silabas": ["pa", "tín"], "n": 2}, {"palabra": "risa", "emoji": "😄", "silabas": ["ri", "sa"], "n": 2}, {"palabra": "llanto", "emoji": "😢", "silabas": ["llan", "to"], "n": 2}, {"palabra": "beso", "emoji": "😘", "silabas": ["be", "so"], "n": 2}, {"palabra": "abrazo", "emoji": "🤗", "silabas": ["a", "bra", "zo"], "n": 3}, {"palabra": "sueño", "emoji": "😴", "silabas": ["sue", "ño"], "n": 2}, {"palabra": "fiesta", "emoji": "🎉", "silabas": ["fies", "ta"], "n": 2}, {"palabra": "música", "emoji": "🎵", "silabas": ["mú", "si", "ca"], "n": 3}, {"palabra": "sorpresa", "emoji": "🎊", "silabas": ["sor", "pre", "sa"], "n": 3}, {"palabra": "choclo", "emoji": "🌽", "silabas": ["cho", "clo"], "n": 2}, {"palabra": "río", "emoji": "🏞️", "silabas": ["rí", "o"], "n": 2}, {"palabra": "puente", "emoji": "🌉", "silabas": ["puen", "te"], "n": 2}, {"palabra": "castillo", "emoji": "🏰", "silabas": ["cas", "ti", "llo"], "n": 3}, {"palabra": "iglesia", "emoji": "⛪", "silabas": ["i", "gle", "sia"], "n": 3}, {"palabra": "escuela", "emoji": "🏫", "silabas": ["es", "cue", "la"], "n": 3}, {"palabra": "hospital", "emoji": "🏥", "silabas": ["hos", "pi", "tal"], "n": 3}, {"palabra": "tienda", "emoji": "🏪", "silabas": ["tien", "da"], "n": 2}, {"palabra": "fábrica", "emoji": "🏭", "silabas": ["fá", "bri", "ca"], "n": 3}, {"palabra": "estadio", "emoji": "🏟️", "silabas": ["es", "ta", "dio"], "n": 3}, {"palabra": "circo", "emoji": "🎪", "silabas": ["cir", "co"], "n": 2}, {"palabra": "científico", "emoji": "🧑‍🔬", "silabas": ["cien", "tí", "fi", "co"], "n": 4}, {"palabra": "granjero", "emoji": "🧑‍🌾", "silabas": ["gran", "je", "ro"], "n": 3}, {"palabra": "piloto", "emoji": "🧑‍✈️", "silabas": ["pi", "lo", "to"], "n": 3}, {"palabra": "mecánico", "emoji": "🧑‍🔧", "silabas": ["me", "cá", "ni", "co"], "n": 4}, {"palabra": "bailarín", "emoji": "🕺", "silabas": ["bai", "la", "rín"], "n": 3}, {"palabra": "martillo", "emoji": "🔨", "silabas": ["mar", "ti", "llo"], "n": 3}, {"palabra": "destornillador", "emoji": "🪛", "silabas": ["des", "tor", "ni", "lla", "dor"], "n": 5}, {"palabra": "tornillo", "emoji": "🔩", "silabas": ["tor", "ni", "llo"], "n": 3}, {"palabra": "cadena", "emoji": "⛓️", "silabas": ["ca", "de", "na"], "n": 3}, {"palabra": "imán", "emoji": "🧲", "silabas": ["i", "mán"], "n": 2}, {"palabra": "lupa", "emoji": "🔍", "silabas": ["lu", "pa"], "n": 2}, {"palabra": "brújula", "emoji": "🧭", "silabas": ["brú", "ju", "la"], "n": 3}, {"palabra": "ancla", "emoji": "⚓", "silabas": ["an", "cla"], "n": 2}, {"palabra": "escalera", "emoji": "🪜", "silabas": ["es", "ca", "le", "ra"], "n": 4}, {"palabra": "telescopio", "emoji": "🔭", "silabas": ["te", "les", "co", "pio"], "n": 4}, {"palabra": "microscopio", "emoji": "🔬", "silabas": ["mi", "cros", "co", "pio"], "n": 4}, {"palabra": "átomo", "emoji": "⚛️", "silabas": ["á", "to", "mo"], "n": 3}, {"palabra": "miedo", "emoji": "😱", "silabas": ["mie", "do"], "n": 2}, {"palabra": "enojo", "emoji": "😠", "silabas": ["e", "no", "jo"], "n": 3}, {"palabra": "duda", "emoji": "🤔", "silabas": ["du", "da"], "n": 2}, {"palabra": "secreto", "emoji": "🤫", "silabas": ["se", "cre", "to"], "n": 3}, {"palabra": "amor", "emoji": "💕", "silabas": ["a", "mor"], "n": 2}, {"palabra": "hielo", "emoji": "🧊", "silabas": ["hie", "lo"], "n": 2}, {"palabra": "diamante", "emoji": "💎", "silabas": ["dia", "man", "te"], "n": 3}, {"palabra": "básquetbol", "emoji": "🏀", "silabas": ["bás", "quet", "bol"], "n": 3}, {"palabra": "tenis", "emoji": "🎾", "silabas": ["te", "nis"], "n": 2}, {"palabra": "boxeo", "emoji": "🥊", "silabas": ["bo", "xe", "o"], "n": 3}, {"palabra": "béisbol", "emoji": "⚾", "silabas": ["béis", "bol"], "n": 2}, {"palabra": "surf", "emoji": "🏄", "silabas": ["surf"], "n": 1}, {"palabra": "escorpión", "emoji": "🦂", "silabas": ["es", "cor", "pión"], "n": 3}, {"palabra": "unicornio", "emoji": "🦄", "silabas": ["u", "ni", "cor", "nio"], "n": 4}, {"palabra": "dragón", "emoji": "🐉", "silabas": ["dra", "gón"], "n": 2}, {"palabra": "fantasma", "emoji": "👻", "silabas": ["fan", "tas", "ma"], "n": 3}, {"palabra": "calabaza", "emoji": "🎃", "silabas": ["ca", "la", "ba", "za"], "n": 4}, {"palabra": "esqueleto", "emoji": "💀", "silabas": ["es", "que", "le", "to"], "n": 4}, {"palabra": "robot", "emoji": "🤖", "silabas": ["ro", "bot"], "n": 2}, {"palabra": "extraterrestre", "emoji": "👽", "silabas": ["ex", "tra", "te", "rres", "tre"], "n": 5}, {"palabra": "mago", "emoji": "🧙", "silabas": ["ma", "go"], "n": 2}, {"palabra": "vampiro", "emoji": "🧛", "silabas": ["vam", "pi", "ro"], "n": 3}, {"palabra": "zombi", "emoji": "🧟", "silabas": ["zom", "bi"], "n": 2}, {"palabra": "hada", "emoji": "🧚", "silabas": ["ha", "da"], "n": 2}, {"palabra": "genio", "emoji": "🧞", "silabas": ["ge", "nio"], "n": 2}, {"palabra": "paracaídas", "emoji": "🪂", "silabas": ["pa", "ra", "ca", "í", "das"], "n": 5}, {"palabra": "satélite", "emoji": "🛰️", "silabas": ["sa", "té", "li", "te"], "n": 4}, {"palabra": "mapa", "emoji": "🗺️", "silabas": ["ma", "pa"], "n": 2}, {"palabra": "tornado", "emoji": "🌪️", "silabas": ["tor", "na", "do"], "n": 3}, {"palabra": "huracán", "emoji": "🌀", "silabas": ["hu", "ra", "cán"], "n": 3}, {"palabra": "playa", "emoji": "🏖️", "silabas": ["pla", "ya"], "n": 2}, {"palabra": "buzo", "emoji": "🤿", "silabas": ["bu", "zo"], "n": 2}, {"palabra": "nadador", "emoji": "🏊", "silabas": ["na", "da", "dor"], "n": 3}, {"palabra": "corredor", "emoji": "🏃", "silabas": ["co", "rre", "dor"], "n": 3}, {"palabra": "escalador", "emoji": "🧗", "silabas": ["es", "ca", "la", "dor"], "n": 4}, {"palabra": "ducha", "emoji": "🚿", "silabas": ["du", "cha"], "n": 2}, {"palabra": "ciclismo", "emoji": "🚴", "silabas": ["ci", "clis", "mo"], "n": 3}, {"palabra": "golf", "emoji": "⛳", "silabas": ["golf"], "n": 1}, {"palabra": "ajedrez", "emoji": "♟️", "silabas": ["a", "je", "drez"], "n": 3}, {"palabra": "saxofón", "emoji": "🎷", "silabas": ["sa", "xo", "fón"], "n": 3}, {"palabra": "pierna", "emoji": "🦵", "silabas": ["pier", "na"], "n": 2}, {"palabra": "medusa", "emoji": "🪼", "silabas": ["me", "du", "sa"], "n": 3}, {"palabra": "poroto", "emoji": "🫘", "silabas": ["po", "ro", "to"], "n": 3}, {"palabra": "empanada", "emoji": "🥟", "silabas": ["em", "pa", "na", "da"], "n": 4}, {"palabra": "completo", "emoji": "🌭", "silabas": ["com", "ple", "to"], "n": 3}, {"palabra": "uno", "emoji": "1", "silabas": ["u", "no"], "n": 2}, {"palabra": "dos", "emoji": "2", "silabas": ["dos"], "n": 1}, {"palabra": "tres", "emoji": "3", "silabas": ["tres"], "n": 1}, {"palabra": "cuatro", "emoji": "4", "silabas": ["cua", "tro"], "n": 2}, {"palabra": "cinco", "emoji": "5", "silabas": ["cin", "co"], "n": 2}, {"palabra": "seis", "emoji": "6", "silabas": ["seis"], "n": 1}, {"palabra": "siete", "emoji": "7", "silabas": ["sie", "te"], "n": 2}, {"palabra": "ocho", "emoji": "8", "silabas": ["o", "cho"], "n": 2}, {"palabra": "nueve", "emoji": "9", "silabas": ["nue", "ve"], "n": 2}, {"palabra": "diez", "emoji": "10", "silabas": ["diez"], "n": 1}, {"palabra": "cuchara", "emoji": "🥄", "silabas": ["cu", "cha", "ra"], "n": 3}, {"palabra": "cuchillo", "emoji": "🔪", "silabas": ["cu", "chi", "llo"], "n": 3}, {"palabra": "plato", "emoji": "🍽️", "silabas": ["pla", "to"], "n": 2}, {"palabra": "vaso", "emoji": "🥤", "silabas": ["va", "so"], "n": 2}, {"palabra": "botella", "emoji": "🍾", "silabas": ["bo", "te", "lla"], "n": 3}, {"palabra": "mantequilla", "emoji": "🧈", "silabas": ["man", "te", "qui", "lla"], "n": 4}, {"palabra": "cereal", "emoji": "🥣", "silabas": ["ce", "re", "al"], "n": 3}, {"palabra": "panqueque", "emoji": "🥞", "silabas": ["pan", "que", "que"], "n": 3}, {"palabra": "burrito", "emoji": "🌯", "silabas": ["bu", "rri", "to"], "n": 3}, {"palabra": "queque", "emoji": "🧁", "silabas": ["que", "que"], "n": 2}, {"palabra": "flan", "emoji": "🍮", "silabas": ["flan"], "n": 1}, {"palabra": "paleta", "emoji": "🍭", "silabas": ["pa", "le", "ta"], "n": 3}, {"palabra": "aceituna", "emoji": "🫒", "silabas": ["a", "cei", "tu", "na"], "n": 4}, {"palabra": "champiñón", "emoji": "🍄", "silabas": ["cham", "pi", "ñón"], "n": 3}, {"palabra": "jengibre", "emoji": "🫚", "silabas": ["jen", "gi", "bre"], "n": 3}, {"palabra": "castaña", "emoji": "🌰", "silabas": ["cas", "ta", "ña"], "n": 3}, {"palabra": "polera", "emoji": "👕", "silabas": ["po", "le", "ra"], "n": 3}, {"palabra": "short", "emoji": "🩳", "silabas": ["short"], "n": 1}, {"palabra": "bikini", "emoji": "👙", "silabas": ["bi", "ki", "ni"], "n": 3}, {"palabra": "mascarilla", "emoji": "😷", "silabas": ["mas", "ca", "ri", "lla"], "n": 4}, {"palabra": "bototo", "emoji": "🥾", "silabas": ["bo", "to", "to"], "n": 3}, {"palabra": "sofá", "emoji": "🛋️", "silabas": ["so", "fá"], "n": 2}, {"palabra": "cajón", "emoji": "🗄️", "silabas": ["ca", "jón"], "n": 2}, {"palabra": "alfombra", "emoji": "🟫", "silabas": ["al", "fom", "bra"], "n": 3}, {"palabra": "tetera", "emoji": "🫖", "silabas": ["te", "te", "ra"], "n": 3}, {"palabra": "balanza", "emoji": "⚖️", "silabas": ["ba", "lan", "za"], "n": 3}, {"palabra": "termómetro", "emoji": "🌡️", "silabas": ["ter", "mó", "me", "tro"], "n": 4}, {"palabra": "pila", "emoji": "🔋", "silabas": ["pi", "la"], "n": 2}, {"palabra": "enchufe", "emoji": "🔌", "silabas": ["en", "chu", "fe"], "n": 3}, {"palabra": "regla", "emoji": "📏", "silabas": ["re", "gla"], "n": 2}, {"palabra": "carpeta", "emoji": "📁", "silabas": ["car", "pe", "ta"], "n": 3}, {"palabra": "sobre", "emoji": "✉️", "silabas": ["so", "bre"], "n": 2}, {"palabra": "buzón", "emoji": "📫", "silabas": ["bu", "zón"], "n": 2}, {"palabra": "iguana", "emoji": "🦎", "silabas": ["i", "gua", "na"], "n": 3}, {"palabra": "nutria", "emoji": "🦦", "silabas": ["nu", "tria"], "n": 2}, {"palabra": "mapache", "emoji": "🦝", "silabas": ["ma", "pa", "che"], "n": 3}, {"palabra": "bisonte", "emoji": "🦬", "silabas": ["bi", "son", "te"], "n": 3}, {"palabra": "alce", "emoji": "🫎", "silabas": ["al", "ce"], "n": 2}, {"palabra": "jabalí", "emoji": "🐗", "silabas": ["ja", "ba", "lí"], "n": 3}, {"palabra": "burro", "emoji": "🫏", "silabas": ["bu", "rro"], "n": 2}, {"palabra": "flamenco", "emoji": "🦩", "silabas": ["fla", "men", "co"], "n": 3}, {"palabra": "cucaracha", "emoji": "🪳", "silabas": ["cu", "ca", "ra", "cha"], "n": 4}, {"palabra": "lombriz", "emoji": "🪱", "silabas": ["lom", "briz"], "n": 2}, {"palabra": "ostra", "emoji": "🦪", "silabas": ["os", "tra"], "n": 2}, {"palabra": "coral", "emoji": "🪸", "silabas": ["co", "ral"], "n": 2}, {"palabra": "granizo", "emoji": "🌨️", "silabas": ["gra", "ni", "zo"], "n": 3}, {"palabra": "neblina", "emoji": "🌫️", "silabas": ["ne", "bli", "na"], "n": 3}, {"palabra": "acantilado", "emoji": "🏔️", "silabas": ["a", "can", "ti", "la", "do"], "n": 5}, {"palabra": "palmera", "emoji": "🌴", "silabas": ["pal", "me", "ra"], "n": 3}, {"palabra": "bambú", "emoji": "🎍", "silabas": ["bam", "bú"], "n": 2}, {"palabra": "carpintero", "emoji": "🪚", "silabas": ["car", "pin", "te", "ro"], "n": 4}, {"palabra": "pescador", "emoji": "🎣", "silabas": ["pes", "ca", "dor"], "n": 3}, {"palabra": "juez", "emoji": "👨‍⚖️", "silabas": ["juez"], "n": 1}, {"palabra": "actor", "emoji": "🎭", "silabas": ["ac", "tor"], "n": 2}, {"palabra": "furgón", "emoji": "🚐", "silabas": ["fur", "gón"], "n": 2}, {"palabra": "velero", "emoji": "⛵", "silabas": ["ve", "le", "ro"], "n": 3}, {"palabra": "teleférico", "emoji": "🚡", "silabas": ["te", "le", "fé", "ri", "co"], "n": 5}, {"palabra": "monopatín", "emoji": "🛴", "silabas": ["mo", "no", "pa", "tín"], "n": 4}, {"palabra": "trineo", "emoji": "🛷", "silabas": ["tri", "ne", "o"], "n": 3}, {"palabra": "bádminton", "emoji": "🏸", "silabas": ["bád", "min", "ton"], "n": 3}, {"palabra": "dardo", "emoji": "🎯", "silabas": ["dar", "do"], "n": 2}, {"palabra": "bolos", "emoji": "🎳", "silabas": ["bo", "los"], "n": 2}, {"palabra": "naipes", "emoji": "🃏", "silabas": ["nai", "pes"], "n": 2}, {"palabra": "yoyo", "emoji": "🪀", "silabas": ["yo", "yo"], "n": 2}, {"palabra": "cuerda", "emoji": "🪢", "silabas": ["cuer", "da"], "n": 2}, {"palabra": "campana", "emoji": "🔔", "silabas": ["cam", "pa", "na"], "n": 3}, {"palabra": "uña", "emoji": "💅", "silabas": ["u", "ña"], "n": 2}, {"palabra": "ceja", "emoji": "🤨", "silabas": ["ce", "ja"], "n": 2}, {"palabra": "mejilla", "emoji": "😊", "silabas": ["me", "ji", "lla"], "n": 3}, {"palabra": "cuaderno", "emoji": "📓", "silabas": ["cua", "der", "no"], "n": 3}, {"palabra": "meteorito", "emoji": "☄️", "silabas": ["me", "te", "o", "ri", "to"], "n": 5}, {"palabra": "galaxia", "emoji": "🌌", "silabas": ["ga", "la", "xia"], "n": 3}, {"palabra": "ovni", "emoji": "🛸", "silabas": ["ov", "ni"], "n": 2}, {"palabra": "bruja", "emoji": "🧙‍♀️", "silabas": ["bru", "ja"], "n": 2}, {"palabra": "calma", "emoji": "🧘", "silabas": ["cal", "ma"], "n": 2}, {"palabra": "curiosidad", "emoji": "🧐", "silabas": ["cu", "rio", "si", "dad"], "n": 4}, {"palabra": "rojo", "emoji": "🔴", "silabas": ["ro", "jo"], "n": 2}, {"palabra": "azul", "emoji": "🔵", "silabas": ["a", "zul"], "n": 2}, {"palabra": "verde", "emoji": "🟢", "silabas": ["ver", "de"], "n": 2}, {"palabra": "amarillo", "emoji": "🟡", "silabas": ["a", "ma", "ri", "llo"], "n": 4}, {"palabra": "morado", "emoji": "🟣", "silabas": ["mo", "ra", "do"], "n": 3}, {"palabra": "naranjo", "emoji": "🟠", "silabas": ["na", "ran", "jo"], "n": 3}, {"palabra": "café", "emoji": "🟤", "silabas": ["ca", "fé"], "n": 2}, {"palabra": "negro", "emoji": "⚫", "silabas": ["ne", "gro"], "n": 2}, {"palabra": "blanco", "emoji": "⚪", "silabas": ["blan", "co"], "n": 2}, {"palabra": "gris", "emoji": "🩶", "silabas": ["gris"], "n": 1}, {"palabra": "círculo", "emoji": "⭕", "silabas": ["cír", "cu", "lo"], "n": 3}, {"palabra": "cuadrado", "emoji": "🟧", "silabas": ["cua", "dra", "do"], "n": 3}, {"palabra": "triángulo", "emoji": "🔺", "silabas": ["trián", "gu", "lo"], "n": 3}, {"palabra": "rombo", "emoji": "🔶", "silabas": ["rom", "bo"], "n": 2}, {"palabra": "gaviota", "emoji": "🕊️", "silabas": ["ga", "vio", "ta"], "n": 3}, {"palabra": "caracola", "emoji": "🐚", "silabas": ["ca", "ra", "co", "la"], "n": 4}, {"palabra": "linterna", "emoji": "🔦", "silabas": ["lin", "ter", "na"], "n": 3}, {"palabra": "frasco", "emoji": "🫙", "silabas": ["fras", "co"], "n": 2}, {"palabra": "canasto", "emoji": "🧺", "silabas": ["ca", "nas", "to"], "n": 3}, {"palabra": "cinta", "emoji": "🎀", "silabas": ["cin", "ta"], "n": 2}, {"palabra": "etiqueta", "emoji": "🏷️", "silabas": ["e", "ti", "que", "ta"], "n": 4}, {"palabra": "papelera", "emoji": "🗑️", "silabas": ["pa", "pe", "le", "ra"], "n": 4}, {"palabra": "camioneta", "emoji": "🛻", "silabas": ["ca", "mio", "ne", "ta"], "n": 4}, {"palabra": "gorila", "emoji": "🦍", "silabas": ["go", "ri", "la"], "n": 3}, {"palabra": "orangután", "emoji": "🦧", "silabas": ["o", "ran", "gu", "tán"], "n": 4}, {"palabra": "perezoso", "emoji": "🦥", "silabas": ["pe", "re", "zo", "so"], "n": 4}, {"palabra": "castor", "emoji": "🦫", "silabas": ["cas", "tor"], "n": 2}, {"palabra": "dinosaurio", "emoji": "🦖", "silabas": ["di", "no", "sau", "rio"], "n": 4}, {"palabra": "gallo", "emoji": "🐓", "silabas": ["ga", "llo"], "n": 2}, {"palabra": "mango", "emoji": "🥭", "silabas": ["man", "go"], "n": 2}, {"palabra": "arándano", "emoji": "🫐", "silabas": ["a", "rán", "da", "no"], "n": 4}, {"palabra": "baño", "emoji": "🚽", "silabas": ["ba", "ño"], "n": 2}, {"palabra": "clip", "emoji": "📎", "silabas": ["clip"], "n": 1}, {"palabra": "computador", "emoji": "🖥️", "silabas": ["com", "pu", "ta", "dor"], "n": 4}, {"palabra": "antena", "emoji": "📡", "silabas": ["an", "te", "na"], "n": 3}, {"palabra": "hacha", "emoji": "🪓", "silabas": ["ha", "cha"], "n": 2}, {"palabra": "nido", "emoji": "🪹", "silabas": ["ni", "do"], "n": 2}, {"palabra": "tren", "emoji": "🚂", "silabas": ["tren"], "n": 1}, {"palabra": "huella", "emoji": "👣", "silabas": ["hue", "lla"], "n": 2}, {"palabra": "mamut", "emoji": "🦣", "silabas": ["ma", "mut"], "n": 2}, {"palabra": "guepardo", "emoji": "🐆", "silabas": ["gue", "par", "do"], "n": 3}, {"palabra": "ensalada", "emoji": "🥗", "silabas": ["en", "sa", "la", "da"], "n": 4}, {"palabra": "palomitas", "emoji": "🍿", "silabas": ["pa", "lo", "mi", "tas"], "n": 4}, {"palabra": "carne", "emoji": "🥩", "silabas": ["car", "ne"], "n": 2}, {"palabra": "hilo", "emoji": "🧵", "silabas": ["hi", "lo"], "n": 2}, {"palabra": "lana", "emoji": "🧶", "silabas": ["la", "na"], "n": 2}, {"palabra": "aguja", "emoji": "🪡", "silabas": ["a", "gu", "ja"], "n": 3}, {"palabra": "trébol", "emoji": "🍀", "silabas": ["tré", "bol"], "n": 2}, {"palabra": "carpa", "emoji": "⛺", "silabas": ["car", "pa"], "n": 2}, {"palabra": "detective", "emoji": "🕵️", "silabas": ["de", "tec", "ti", "ve"], "n": 4}, {"palabra": "bota", "emoji": "👢", "silabas": ["bo", "ta"], "n": 2}, {"palabra": "telaraña", "emoji": "🕸️", "silabas": ["te", "la", "ra", "ña"], "n": 4}, {"palabra": "chala", "emoji": "🩴", "silabas": ["cha", "la"], "n": 2}, {"palabra": "hojas", "emoji": "🍂", "silabas": ["ho", "jas"], "n": 2}, {"palabra": "semáforo", "emoji": "🚦", "silabas": ["se", "má", "fo", "ro"], "n": 4}, {"palabra": "audífono", "emoji": "🎧", "silabas": ["au", "dí", "fo", "no"], "n": 4}, {"palabra": "celular", "emoji": "📱", "silabas": ["ce", "lu", "lar"], "n": 3}, {"palabra": "sopapo", "emoji": "🪠", "silabas": ["so", "pa", "po"], "n": 3}, {"palabra": "extintor", "emoji": "🧯", "silabas": ["ex", "tin", "tor"], "n": 3}, {"palabra": "mosca", "emoji": "🪰", "silabas": ["mos", "ca"], "n": 2}, {"palabra": "mosquito", "emoji": "🦟", "silabas": ["mos", "qui", "to"], "n": 3}, {"palabra": "pintor", "emoji": "🧑‍🎨", "silabas": ["pin", "tor"], "n": 2}, {"palabra": "quitasol", "emoji": "⛱️", "silabas": ["qui", "ta", "sol"], "n": 3}, {"palabra": "arveja", "emoji": "🫛", "silabas": ["ar", "ve", "ja"], "n": 3}];
+const MAX_SILABAS = 5;
+
+// ------------------------------------------------
+// VOZ NATIVA
+// ------------------------------------------------
+const NOMBRES_VOZ_FEMENINA = [
+  "mujer", "female", "woman",
+  "mónica", "monica", "paulina", "sabina", "helena", "laura", "lucia", "lucía",
+  "camila", "elvira", "conchita", "penélope", "penelope", "marisol",
+  "esperanza", "soledad", "catalina", "francisca", "reyes", "carmen",
+  "ines", "inés", "isabela", "valeria", "renata", "raquel"
+];
+let vozSeleccionada = null;
+const selectorVoz = document.getElementById('selectorVoz');
+
+function poblarSelectorVoces() {
+  if (!("speechSynthesis" in window)) return;
+  const voces = window.speechSynthesis.getVoices();
+  if (!voces || voces.length === 0) return;
+  const esVoces = voces.filter(v => v.lang && v.lang.toLowerCase().startsWith("es"));
+  const candidatas = esVoces.length ? esVoces : voces;
+  selectorVoz.innerHTML = "";
+  candidatas.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${v.name} (${v.lang})`;
+    selectorVoz.appendChild(opt);
+  });
+  const guardada = localStorage.getItem('vozElegidaNombre');
+  let indiceInicial = candidatas.findIndex(v => v.name === guardada);
+  if (indiceInicial < 0) indiceInicial = candidatas.findIndex(v => NOMBRES_VOZ_FEMENINA.some(f => v.name.toLowerCase().includes(f)));
+  if (indiceInicial < 0) indiceInicial = 0;
+  selectorVoz.value = indiceInicial;
+  vozSeleccionada = candidatas[indiceInicial] || null;
+  window._vocesDisponibles = candidatas;
+}
+if ("speechSynthesis" in window) {
+  poblarSelectorVoces();
+  window.speechSynthesis.onvoiceschanged = poblarSelectorVoces;
+}
+selectorVoz.addEventListener('change', () => {
+  const voces = window._vocesDisponibles || [];
+  vozSeleccionada = voces[selectorVoz.value] || null;
+  if (vozSeleccionada) localStorage.setItem('vozElegidaNombre', vozSeleccionada.name);
+  hablarTexto('hola');
+});
+function hablarTexto(texto, callback) {
+  if (!("speechSynthesis" in window) || !texto) { if (callback) callback(); return; }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(texto);
+  utterance.lang = vozSeleccionada ? vozSeleccionada.lang : "es-ES";
+  if (vozSeleccionada) utterance.voice = vozSeleccionada;
+  utterance.rate = 0.85;
+  utterance.pitch = 1.05;
+  utterance.volume = 1;
+  if (callback) utterance.onend = callback;
+  window.speechSynthesis.speak(utterance);
+}
+
+// Quita tildes solo para la PRONUNCIACIÓN: algunos motores de voz, al recibir
+// una sílaba muy corta con tilde (ej. "ár"), la deletrean en vez de sonarla
+// ("a con acento"). El texto visual en la burbuja se muestra siempre con tilde.
+function quitarTildeParaHabla(s) {
+  const mapa = {"á":"a","é":"e","í":"i","ó":"o","ú":"u","ü":"u","Á":"A","É":"E","Í":"I","Ó":"O","Ú":"U"};
+  return s.split('').map(c => mapa[c] || c).join('');
+}
+
+// Lee las sílabas una por una, con una pequeña pausa entre cada una
+function hablarPorSilabas(silabas, indice = 0) {
+  if (indice >= silabas.length) return;
+  hablarTexto(quitarTildeParaHabla(silabas[indice]), () => {
+    setTimeout(() => hablarPorSilabas(silabas, indice + 1), 180);
+  });
+}
+
+// ------------------------------------------------
+// ESTADO DEL JUEGO
+// ------------------------------------------------
+const emojiObjetivo = document.getElementById('emojiObjetivo');
+const opcionesContenedor = document.getElementById('opcionesNumeros');
+const mensajeExito = document.getElementById('mensajeExito');
+const zonaSilabas = document.getElementById('zonaSilabas');
+const silabasContenedor = document.getElementById('silabasPalabra');
+const btnSiguiente = document.getElementById('btnSiguiente');
+const btnEscuchar = document.getElementById('btnEscuchar');
+
+let actual = null;
+let colaPalabras = [];
+
+function mezclar(array) {
+  const copia = [...array];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+function elegirPalabraAleatoria() {
+  if (colaPalabras.length === 0) colaPalabras = mezclar(PALABRAS);
+  return colaPalabras.pop();
+}
+
+function nuevaRonda() {
+  actual = elegirPalabraAleatoria();
+  mensajeExito.hidden = true;
+  zonaSilabas.hidden = true;
+  emojiObjetivo.classList.remove('emoji-exito');
+  emojiObjetivo.textContent = actual.emoji;
+
+  opcionesContenedor.innerHTML = '';
+  opcionesContenedor.querySelectorAll('.burbuja-numero').forEach(b => b.remove());
+  for (let n = 1; n <= MAX_SILABAS; n++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'burbuja-letra burbuja-numero';
+    const span = document.createElement('span');
+    span.className = 'texto-burbuja';
+    span.textContent = n;
+    btn.appendChild(span);
+    btn.addEventListener('click', () => numeroTocado(n, btn));
+    opcionesContenedor.appendChild(btn);
+  }
+  ajustarTamanoOpciones();
+
+  setTimeout(() => hablarTexto(actual.palabra), 500);
+}
+
+function ajustarTamanoOpciones() {
+  const botones = opcionesContenedor.querySelectorAll('.burbuja-numero');
+  const n = botones.length;
+  if (!n) return;
+  const disponible = opcionesContenedor.clientWidth - 24;
+  const gap = 16;
+  let tamano = Math.floor((disponible - gap * (n - 1)) / n);
+  tamano = Math.max(50, Math.min(80, tamano));
+  const fuente = Math.max(1.1, tamano * 0.026);
+  opcionesContenedor.style.gap = gap + 'px';
+  botones.forEach((b) => {
+    b.style.width = tamano + 'px';
+    b.style.height = tamano + 'px';
+    b.style.fontSize = fuente + 'rem';
+  });
+}
+window.addEventListener('resize', ajustarTamanoOpciones);
+
+function numeroTocado(n, elementoBoton) {
+  if (n === actual.n) {
+    elementoBoton.classList.add('opcion-correcta');
+    setTimeout(celebrar, 400);
+  } else {
+    elementoBoton.classList.remove('sacude');
+    void elementoBoton.offsetWidth;
+    elementoBoton.classList.add('sacude');
+  }
+}
+
+function celebrar() {
+  mensajeExito.hidden = false;
+  emojiObjetivo.classList.add('emoji-exito');
+
+  zonaSilabas.hidden = false;
+  silabasContenedor.innerHTML = '';
+  actual.silabas.forEach((silaba, i) => {
+    const contenedor = document.createElement('div');
+    contenedor.className = 'contenedor-silaba';
+    const ficha = document.createElement('button');
+    ficha.type = 'button';
+    ficha.className = 'ficha-silaba';
+    ficha.textContent = silaba.toUpperCase();
+    ficha.addEventListener('click', () => hablarTexto(quitarTildeParaHabla(silaba)));
+    const numero = document.createElement('span');
+    numero.className = 'numero-silaba';
+    numero.textContent = i + 1;
+    contenedor.appendChild(ficha);
+    contenedor.appendChild(numero);
+    silabasContenedor.appendChild(contenedor);
+  });
+
+  setTimeout(() => hablarPorSilabas(actual.silabas), 500);
+}
+
+btnSiguiente.addEventListener('click', nuevaRonda);
+btnEscuchar.addEventListener('click', () => {
+  if (actual) hablarTexto(actual.palabra);
+});
+
+nuevaRonda();
+
+function decirInstruccionInicial() {
+  hablarTexto('¿Cuántas sílabas tiene esta palabra? Escucha con atención y toca el número.');
+}
+if (window._vocesDisponibles) {
+  setTimeout(decirInstruccionInicial, 900);
+} else {
+  const esperar = setInterval(() => {
+    if (window._vocesDisponibles) {
+      clearInterval(esperar);
+      setTimeout(decirInstruccionInicial, 900);
+    }
+  }, 150);
+  setTimeout(() => clearInterval(esperar), 3000);
+}
+
+  </script>
+</body>
+</html>
