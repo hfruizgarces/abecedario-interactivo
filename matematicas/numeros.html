@@ -8,12 +8,14 @@
 <title>Reconoce los Números - Matemáticas Interactivas</title>
 <link rel="stylesheet" href="estilo-mate.css">
 <style>
-  .grupo-objetos.chico { grid-template-columns: repeat(5, 1fr); max-width: 220px; padding: 10px; }
-  .grupo-objetos.chico .objeto { font-size: clamp(1rem, 3.6vw, 1.3rem); }
-  .btn-opcion.cluster { flex-direction: column; padding: 10px; }
+  .grupo-objetos.chico { gap: 3px !important; padding: 6px !important; }
+  .grupo-objetos.chico .objeto { font-size: clamp(0.55rem, 1.8vw, 0.75rem); }
+  .btn-opcion.cluster { flex-direction: column; padding: 6px; }
+  .opciones-fila:has(.cluster) { align-items: flex-start; }
   .numeral-grande {
-    font-size: clamp(3.5rem, 16vw, 6rem); font-weight: bold; color: var(--celeste-fuerte);
-    text-shadow: 3px 3px 0 rgba(255,255,255,0.8), 5px 5px 0 rgba(var(--sombra-tinta),0.14);
+    font-size: clamp(2.4rem, 11vw, 3.8rem); font-weight: bold; color: var(--celeste-fuerte);
+    text-shadow: 2px 2px 0 rgba(255,255,255,0.8), 4px 4px 0 rgba(var(--sombra-tinta),0.14);
+    line-height: 1;
   }
 </style>
 </head>
@@ -104,11 +106,16 @@
   function grupoObjetos(cantidad, emoji, chico = false) {
     const cont = document.createElement("div");
     cont.className = "grupo-objetos" + (chico ? " chico" : "");
+    const columnas = chico
+      ? (cantidad <= 10 ? 5 : (cantidad <= 20 ? 8 : 10))
+      : (cantidad <= 10 ? 5 : (cantidad <= 20 ? 7 : 10));
+    cont.style.gridTemplateColumns = `repeat(${columnas}, 1fr)`;
+    cont.style.maxWidth = (columnas * (chico ? 18 : 36)) + "px";
     for (let i = 0; i < cantidad; i++) {
       const span = document.createElement("span");
       span.className = "objeto";
       span.textContent = emoji;
-      span.style.animationDelay = Math.min(i * 0.02, 0.5) + "s";
+      span.style.animationDelay = Math.min(i * 0.015, 0.35) + "s";
       cont.appendChild(span);
     }
     return cont;
