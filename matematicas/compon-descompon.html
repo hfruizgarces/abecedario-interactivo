@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#AEE6FF">
+<title>Compón y Descompón - Matemáticas Interactivas</title>
+<link rel="stylesheet" href="estilo-mate.css">
+<style>
+  .grupo-objetos.chico { grid-template-columns: repeat(5, 1fr); max-width: 200px; padding: 8px; }
+  .grupo-objetos.chico .objeto { font-size: clamp(1rem, 3.6vw, 1.25rem); }
+  .ecuacion { font-size: clamp(1.4rem, 5vw, 2rem); font-weight: bold; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .ecuacion .num { background: var(--blanco); border-radius: 16px; padding: 6px 16px; box-shadow: 0 4px 0 rgba(var(--sombra-tinta),0.14), 0 6px 12px rgba(var(--sombra-tinta),0.1); }
+  .ecuacion .num.hueco { background: rgba(255,255,255,0.4); border: 3px dashed rgba(58,58,74,0.3); color: rgba(58,58,74,0.4); }
+</style>
+</head>
+<body>
+
+  <div class="fondo-decorativo" aria-hidden="true">
+    <div class="nube nube1"></div>
+    <div class="nube nube2"></div>
+    <div class="nube nube3"></div>
+    <div class="estrella estrella1">⭐</div>
+    <div class="estrella estrella2">✨</div>
+    <div class="estrella estrella3">⭐</div>
+    <div class="forma forma1"></div>
+    <div class="forma forma2"></div>
+    <div class="forma forma3"></div>
+  </div>
+
+  <header class="barra-superior">
+    <a href="index.html" class="btn-superior" style="text-decoration:none; display:inline-block;">🏠 Matemáticas</a>
+    <button id="btnEscuchar" class="btn-superior" type="button">🔊 Escuchar</button>
+  </header>
+
+  <main class="pantalla">
+    <span class="etiqueta-eyebrow">🧩 Compón y Descompón</span>
+    <h1 class="titulo-juego">Junta y separa cantidades</h1>
+    <p class="subtitulo-juego" id="subtituloModo">Ej: 7 es 5 y 2. Descubre el número que falta.</p>
+
+    <div class="selector-fila" id="selectorNivel">
+      <button class="btn-chip chip-celeste" data-nivel="1" type="button">Hasta 10</button>
+      <button class="btn-chip chip-celeste" data-nivel="2" type="button">Hasta 20</button>
+    </div>
+
+    <div class="selector-fila" id="selectorModo">
+      <button class="btn-chip chip-naranjo" data-modo="descomponer" type="button">Descompón</button>
+      <button class="btn-chip chip-naranjo" data-modo="componer" type="button">Compón</button>
+    </div>
+
+    <div class="panel-puntaje">⭐ <span id="puntaje">0</span> aciertos</div>
+
+    <div class="tablero" id="tablero"></div>
+
+    <div id="mensajeFeedback" class="mensaje-feedback"></div>
+
+    <button id="btnSiguienteRonda" class="btn-grande" type="button" hidden>Siguiente ➜</button>
+
+    <p class="pie-pagina">Educadora Fabiola Basualto — Recursos Interactivos</p>
+  </main>
+
+  <script src="comun.js"></script>
+  <script>
+  const RANGOS = { 1: [4, 10], 2: [10, 20] };
+  const OBJETOS = ["🔵", "⭐", "🍓", "🧸"];
+
+  let nivelActual = 1;
+  let modoActual = "descomponer";
+  let puntaje = 0;
+
+  const elTablero = document.getElementById("tablero");
+  const elMensaje = document.getElementById("mensajeFeedback");
+  const elPuntaje = document.getElementById("puntaje");
+  const elBtnSiguiente = document.getElementById("btnSiguienteRonda");
+  const elSubtitulo = document.getElementById("subtituloModo");
+
+  const SUBTITULOS = {
+    descomponer: "Ej: 7 es 5 y 2. Descubre el número que falta.",
+    componer: "Junta las dos cantidades y elige cuánto es en total."
+  };
+
+  function limpiarMensaje() { elMensaje.textContent = ""; elMensaje.className = "mensaje-feedback"; }
+  function mostrarExito() {
+    elMensaje.textContent = fraseExito();
+    elMensaje.className = "mensaje-feedback exito";
+    tonoAcierto(); confeti();
+    puntaje++; elPuntaje.textContent = puntaje;
+  }
+  function mostrarAnimo() {
+    elMensaje.textContent = fraseAnimo();
+    elMensaje.className = "mensaje-feedback animo";
+    tonoError();
+  }
+
+  function grupoObjetos(cantidad, emoji) {
+    const cont = document.createElement("div");
+    cont.className = "grupo-objetos chico";
+    for (let i = 0; i < cantidad; i++) {
+      const span = document.createElement("span");
+      span.className = "objeto";
+      span.textContent = emoji;
+      cont.appendChild(span);
+    }
+    return cont;
+  }
+
+  function cajaGrupo(titulo, cantidad, emoji) {
+    const caja = document.createElement("div");
+    caja.className = "caja-grupo";
+    const t = document.createElement("div");
+    t.className = "titulo-caja";
+    t.textContent = titulo;
+    caja.appendChild(t);
+    caja.appendChild(grupoObjetos(cantidad, emoji));
+    return caja;
+  }
+
+  function numerosDistractores(correcto, min, max, cuantos) {
+    const set = new Set([correcto]);
+    let intentos = 0;
+    while (set.size < cuantos + 1 && intentos < 200) {
+      intentos++;
+      const delta = enteroAlAzar(-4, 4);
+      const candidato = correcto + delta;
+      if (candidato >= min && candidato <= max) set.add(candidato);
+    }
+    while (set.size < cuantos + 1) set.add(enteroAlAzar(min, max));
+    return [...set];
+  }
+
+  function elegirSplit(total) {
+    const a = enteroAlAzar(1, total - 1);
+    const b = total - a;
+    return [a, b];
+  }
+
+  // ------------------------------------------------
+  // MODO: Descompón  (N es a y ___)
+  // ------------------------------------------------
+  function rondaDescomponer() {
+    const [min, max] = RANGOS[nivelActual];
+    const total = enteroAlAzar(min, max);
+    const [a, b] = elegirSplit(total);
+    const emoji = elegirAlAzar(OBJETOS);
+
+    elTablero.innerHTML = "";
+
+    const fila = document.createElement("div");
+    fila.className = "fila-cajas";
+    fila.appendChild(cajaGrupo("Total: " + total, total, emoji));
+    fila.appendChild(document.createElement("div")).className = "signo-grande";
+    fila.lastChild.textContent = "=";
+    fila.appendChild(cajaGrupo("Grupo A", a, emoji));
+    const signo2 = document.createElement("div");
+    signo2.className = "signo-grande";
+    signo2.textContent = "+";
+    fila.appendChild(signo2);
+    const cajaOculta = document.createElement("div");
+    cajaOculta.className = "caja-grupo";
+    cajaOculta.innerHTML = '<div class="titulo-caja">Grupo B</div>';
+    const huecoGrande = document.createElement("div");
+    huecoGrande.className = "numeral-grande";
+    huecoGrande.style.fontSize = "2.2rem";
+    huecoGrande.textContent = "?";
+    cajaOculta.appendChild(huecoGrande);
+    fila.appendChild(cajaOculta);
+    elTablero.appendChild(fila);
+
+    const pregunta = document.createElement("p");
+    pregunta.style.fontWeight = "bold";
+    pregunta.textContent = total + " es " + a + " y ___";
+    elTablero.appendChild(pregunta);
+
+    const opciones = barajar(numerosDistractores(b, 1, total - 1, 2));
+    const filaOp = document.createElement("div");
+    filaOp.className = "opciones-fila";
+    opciones.forEach(n => {
+      const btn = document.createElement("button");
+      btn.className = "btn-opcion";
+      btn.textContent = n;
+      btn.addEventListener("click", () => evaluar(btn, n === b, total + " es " + a + " y " + b));
+      filaOp.appendChild(btn);
+    });
+    elTablero.appendChild(filaOp);
+  }
+
+  // ------------------------------------------------
+  // MODO: Compón  (a y b, ¿cuánto es en total?)
+  // ------------------------------------------------
+  function rondaComponer() {
+    const [min, max] = RANGOS[nivelActual];
+    const total = enteroAlAzar(min, max);
+    const [a, b] = elegirSplit(total);
+    const emoji = elegirAlAzar(OBJETOS);
+
+    elTablero.innerHTML = "";
+
+    const fila = document.createElement("div");
+    fila.className = "fila-cajas";
+    fila.appendChild(cajaGrupo("Grupo A", a, emoji));
+    const signo = document.createElement("div");
+    signo.className = "signo-grande";
+    signo.textContent = "+";
+    fila.appendChild(signo);
+    fila.appendChild(cajaGrupo("Grupo B", b, emoji));
+    elTablero.appendChild(fila);
+
+    const pregunta = document.createElement("p");
+    pregunta.style.fontWeight = "bold";
+    pregunta.textContent = a + " y " + b + ", ¿cuánto es en total?";
+    elTablero.appendChild(pregunta);
+
+    const opciones = barajar(numerosDistractores(total, min, max, 2));
+    const filaOp = document.createElement("div");
+    filaOp.className = "opciones-fila";
+    opciones.forEach(n => {
+      const btn = document.createElement("button");
+      btn.className = "btn-opcion";
+      btn.textContent = n;
+      btn.addEventListener("click", () => evaluar(btn, n === total, a + " más " + b + " es " + total));
+      filaOp.appendChild(btn);
+    });
+    elTablero.appendChild(filaOp);
+  }
+
+  function evaluar(btn, esCorrecta, frase) {
+    document.querySelectorAll(".btn-opcion").forEach(b => b.disabled = true);
+    if (esCorrecta) {
+      btn.classList.add("correcta");
+      mostrarExito();
+      hablar(frase);
+    } else {
+      btn.classList.add("incorrecta");
+      mostrarAnimo();
+    }
+    elBtnSiguiente.hidden = false;
+  }
+
+  function nuevaRonda() {
+    limpiarMensaje();
+    elBtnSiguiente.hidden = true;
+    if (modoActual === "descomponer") rondaDescomponer();
+    else rondaComponer();
+  }
+
+  document.querySelectorAll("#selectorNivel .btn-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#selectorNivel .btn-chip").forEach(b => b.classList.remove("activo"));
+      btn.classList.add("activo");
+      nivelActual = Number(btn.dataset.nivel);
+      nuevaRonda();
+    });
+  });
+
+  document.querySelectorAll("#selectorModo .btn-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#selectorModo .btn-chip").forEach(b => b.classList.remove("activo"));
+      btn.classList.add("activo");
+      modoActual = btn.dataset.modo;
+      elSubtitulo.textContent = SUBTITULOS[modoActual];
+      nuevaRonda();
+    });
+  });
+
+  document.getElementById("btnSiguienteRonda").addEventListener("click", nuevaRonda);
+  document.getElementById("btnEscuchar").addEventListener("click", () => hablar(SUBTITULOS[modoActual]));
+
+  document.querySelector('#selectorNivel .btn-chip[data-nivel="1"]').classList.add("activo");
+  document.querySelector('#selectorModo .btn-chip[data-modo="descomponer"]').classList.add("activo");
+  nuevaRonda();
+  </script>
+</body>
+</html>

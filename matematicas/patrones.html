@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#AEE6FF">
+<title>Patrones - Matemáticas Interactivas</title>
+<link rel="stylesheet" href="estilo-mate.css">
+</head>
+<body>
+
+  <div class="fondo-decorativo" aria-hidden="true">
+    <div class="nube nube1"></div>
+    <div class="nube nube2"></div>
+    <div class="nube nube3"></div>
+    <div class="estrella estrella1">⭐</div>
+    <div class="estrella estrella2">✨</div>
+    <div class="estrella estrella3">⭐</div>
+    <div class="forma forma1"></div>
+    <div class="forma forma2"></div>
+    <div class="forma forma3"></div>
+  </div>
+
+  <header class="barra-superior">
+    <a href="index.html" class="btn-superior" style="text-decoration:none; display:inline-block;">🏠 Matemáticas</a>
+    <button id="btnEscuchar" class="btn-superior" type="button">🔊 Escuchar</button>
+  </header>
+
+  <main class="pantalla">
+    <span class="etiqueta-eyebrow">🔺🔵🔺 Patrones</span>
+    <h1 class="titulo-juego">¿Qué patrón es?</h1>
+    <p class="subtitulo-juego" id="subtituloModo">Mira la secuencia y descubre qué viene después.</p>
+
+    <div class="selector-fila" id="selectorNivel">
+      <button class="btn-chip chip-celeste" data-nivel="1" type="button">Nivel 1</button>
+      <button class="btn-chip chip-celeste" data-nivel="2" type="button">Nivel 2</button>
+      <button class="btn-chip chip-celeste" data-nivel="3" type="button">Nivel 3</button>
+    </div>
+
+    <div class="selector-fila" id="selectorModo">
+      <button class="btn-chip chip-naranjo" data-modo="siguiente" type="button">¿Qué sigue?</button>
+      <button class="btn-chip chip-naranjo" data-modo="nombrar" type="button">Nombra el patrón</button>
+      <button class="btn-chip chip-naranjo" data-modo="construir" type="button">Construye el patrón</button>
+    </div>
+
+    <div class="panel-puntaje">⭐ <span id="puntaje">0</span> aciertos</div>
+
+    <div class="tablero" id="tablero">
+      <!-- contenido de la ronda, generado por JS -->
+    </div>
+
+    <div id="mensajeFeedback" class="mensaje-feedback"></div>
+
+    <button id="btnSiguienteRonda" class="btn-grande" type="button" hidden>Siguiente ➜</button>
+
+    <p class="pie-pagina">Educadora Fabiola Basualto — Recursos Interactivos</p>
+  </main>
+
+  <script src="comun.js"></script>
+  <script>
+  // ============================================
+  // PATRONES - lógica del juego
+  // ============================================
+
+  const UNIDADES = {
+    AB:   ["A","B"],
+    AAB:  ["A","A","B"],
+    ABB:  ["A","B","B"],
+    ABA:  ["A","B","A"],
+    ABAB: ["A","B","A","B"],
+    AABB: ["A","A","B","B"],
+    ABC:  ["A","B","C"],
+    ABCC: ["A","B","C","C"],
+    ABBA: ["A","B","B","A"],
+    ABCD: ["A","B","C","D"]
+  };
+
+  const NIVELES = {
+    1: ["AB", "AAB", "ABB"],
+    2: ["ABA", "ABAB", "AABB"],
+    3: ["ABC", "ABCC", "ABBA", "ABCD"]
+  };
+
+  const TEMAS = [
+    ["🍎", "🍌", "🍇", "🍊"],
+    ["🐶", "🐱", "🐰", "🐥"],
+    ["🚗", "🚲", "✈️", "🚂"],
+    ["🐠", "🐙", "🦀", "🐚"],
+    ["🌸", "🍃", "☀️", "🌧️"],
+    ["🍪", "🧁", "🍩", "🍰"]
+  ];
+
+  const ROLES = ["A", "B", "C", "D"];
+
+  let nivelActual = 1;
+  let modoActual = "siguiente";
+  let puntaje = 0;
+  let rondaActiva = null; // { codigo, roles, mapaEmoji }
+
+  const elTablero = document.getElementById("tablero");
+  const elMensaje = document.getElementById("mensajeFeedback");
+  const elPuntaje = document.getElementById("puntaje");
+  const elBtnSiguiente = document.getElementById("btnSiguienteRonda");
+  const elSubtitulo = document.getElementById("subtituloModo");
+
+  const SUBTITULOS = {
+    siguiente: "Mira la secuencia y descubre qué viene después.",
+    nombrar: "Mira la secuencia y elige su nombre: AB, AAB, ABC...",
+    construir: "Usa las claves para construir el patrón pedido."
+  };
+
+  function rolesDistintos(codigo) {
+    return [...new Set(UNIDADES[codigo])];
+  }
+
+  function generarMapaEmoji(codigo) {
+    const roles = rolesDistintos(codigo);
+    const tema = barajar(elegirAlAzar(TEMAS).slice());
+    const mapa = {};
+    roles.forEach((r, i) => { mapa[r] = tema[i]; });
+    return mapa;
+  }
+
+  function construirSecuencia(codigo, mapa, repeticiones) {
+    const unidad = UNIDADES[codigo];
+    const secuencia = [];
+    for (let i = 0; i < repeticiones; i++) {
+      unidad.forEach(r => secuencia.push(r));
+    }
+    return secuencia;
+  }
+
+  function fichaEmoji(rol, emoji, extraClass = "") {
+    const div = document.createElement("div");
+    div.className = `ficha-emoji rol-${rol.toLowerCase()} ${extraClass}`;
+    div.textContent = emoji;
+    return div;
+  }
+
+  function fichaLetra(rol, chica = true) {
+    const div = document.createElement("div");
+    div.className = `ficha-letra letra-${rol.toLowerCase()}${chica ? " chica" : ""}`;
+    div.textContent = rol;
+    return div;
+  }
+
+  function limpiarMensaje() {
+    elMensaje.textContent = "";
+    elMensaje.className = "mensaje-feedback";
+  }
+
+  function mostrarExito(texto) {
+    elMensaje.textContent = texto || fraseExito();
+    elMensaje.className = "mensaje-feedback exito";
+    tonoAcierto();
+    confeti();
+    puntaje++;
+    elPuntaje.textContent = puntaje;
+  }
+
+  function mostrarAnimo(texto) {
+    elMensaje.textContent = texto || fraseAnimo();
+    elMensaje.className = "mensaje-feedback animo";
+    tonoError();
+  }
+
+  // ------------------------------------------------
+  // MODO 1: ¿Qué sigue?
+  // ------------------------------------------------
+  function rondaSiguiente() {
+    const codigo = elegirAlAzar(NIVELES[nivelActual]);
+    const mapa = generarMapaEmoji(codigo);
+    const unidad = UNIDADES[codigo];
+    const repRequeridas = Math.max(2, Math.ceil(8 / unidad.length));
+    const secuenciaCompleta = construirSecuencia(codigo, mapa, repRequeridas + 1);
+    const visibles = secuenciaCompleta.slice(0, secuenciaCompleta.length - 1);
+    const rolOculto = secuenciaCompleta[secuenciaCompleta.length - 1];
+
+    rondaActiva = { codigo, mapa, rolOculto };
+
+    elTablero.innerHTML = "";
+    const tira = document.createElement("div");
+    tira.className = "tira-secuencia";
+    visibles.forEach(r => tira.appendChild(fichaEmoji(r, mapa[r])));
+    const hueco = document.createElement("div");
+    hueco.className = "ficha-emoji hueco";
+    hueco.textContent = "?";
+    tira.appendChild(hueco);
+    elTablero.appendChild(tira);
+
+    const roles = rolesDistintos(codigo);
+    let opciones = [rolOculto];
+    roles.filter(r => r !== rolOculto).forEach(r => opciones.push(r));
+    while (opciones.length < 3) {
+      const temaExtra = elegirAlAzar(TEMAS);
+      const emojiExtra = elegirAlAzar(temaExtra);
+      if (!Object.values(mapa).includes(emojiExtra)) {
+        opciones.push("__" + emojiExtra);
+      }
+    }
+    opciones = barajar(opciones).slice(0, 3);
+    if (!opciones.some(o => o === rolOculto)) opciones[0] = rolOculto;
+
+    const fila = document.createElement("div");
+    fila.className = "opciones-fila";
+    opciones.forEach(op => {
+      const esExtra = op.startsWith("__");
+      const emoji = esExtra ? op.slice(2) : mapa[op];
+      const btn = document.createElement("button");
+      btn.className = "btn-opcion";
+      btn.style.fontSize = "2rem";
+      btn.textContent = emoji;
+      btn.addEventListener("click", () => evaluarSiguiente(btn, op === rolOculto));
+      fila.appendChild(btn);
+    });
+    elTablero.appendChild(fila);
+  }
+
+  function evaluarSiguiente(btn, esCorrecta) {
+    document.querySelectorAll(".btn-opcion").forEach(b => b.disabled = true);
+    if (esCorrecta) {
+      btn.classList.add("correcta");
+      mostrarExito();
+    } else {
+      btn.classList.add("incorrecta");
+      mostrarAnimo();
+    }
+    elBtnSiguiente.hidden = false;
+  }
+
+  // ------------------------------------------------
+  // MODO 2: Nombra el patrón
+  // ------------------------------------------------
+  function codigoAFichas(codigo, chica = true) {
+    const cont = document.createElement("div");
+    cont.className = "codigo-patron";
+    UNIDADES[codigo].forEach(r => cont.appendChild(fichaLetra(r, chica)));
+    return cont;
+  }
+
+  function rondaNombrar() {
+    const codigo = elegirAlAzar(NIVELES[nivelActual]);
+    const mapa = generarMapaEmoji(codigo);
+    const unidad = UNIDADES[codigo];
+    const repeticiones = Math.max(2, Math.ceil(9 / unidad.length));
+    const secuencia = construirSecuencia(codigo, mapa, repeticiones);
+
+    rondaActiva = { codigo, mapa };
+
+    elTablero.innerHTML = "";
+    const tira = document.createElement("div");
+    tira.className = "tira-secuencia";
+    secuencia.forEach(r => tira.appendChild(fichaEmoji(r, mapa[r])));
+    elTablero.appendChild(tira);
+
+    const pregunta = document.createElement("p");
+    pregunta.style.fontWeight = "bold";
+    pregunta.style.margin = "4px 0 0 0";
+    pregunta.textContent = "¿Qué patrón es?";
+    elTablero.appendChild(pregunta);
+
+    let distractores = NIVELES[nivelActual].filter(c => c !== codigo);
+    distractores = barajar(distractores).slice(0, 3);
+    let opciones = barajar([codigo, ...distractores]);
+
+    const fila = document.createElement("div");
+    fila.className = "opciones-fila";
+    opciones.forEach(cod => {
+      const btn = document.createElement("button");
+      btn.className = "btn-opcion";
+      btn.appendChild(codigoAFichas(cod));
+      btn.addEventListener("click", () => evaluarNombrar(btn, cod === codigo, codigo));
+      fila.appendChild(btn);
+    });
+    elTablero.appendChild(fila);
+  }
+
+  function evaluarNombrar(btn, esCorrecta, codigoCorrecto) {
+    document.querySelectorAll(".btn-opcion").forEach(b => b.disabled = true);
+    if (esCorrecta) {
+      btn.classList.add("correcta");
+      mostrarExito();
+      hablar("Es un patrón " + codigoCorrecto.split("").join(", "));
+    } else {
+      btn.classList.add("incorrecta");
+      mostrarAnimo();
+    }
+    elBtnSiguiente.hidden = false;
+  }
+
+  // ------------------------------------------------
+  // MODO 3: Construye el patrón
+  // ------------------------------------------------
+  let construirObjetivo = [];
+  let construirMapa = {};
+  let construirRespuesta = [];
+
+  function rondaConstruir() {
+    const codigo = elegirAlAzar(NIVELES[nivelActual]);
+    const mapa = generarMapaEmoji(codigo);
+    const unidad = UNIDADES[codigo];
+    const repeticiones = 2;
+    construirObjetivo = construirSecuencia(codigo, mapa, repeticiones);
+    construirMapa = mapa;
+    construirRespuesta = [];
+
+    rondaActiva = { codigo, mapa };
+
+    elTablero.innerHTML = "";
+
+    const etiqueta = document.createElement("p");
+    etiqueta.style.fontWeight = "bold";
+    etiqueta.style.margin = "0";
+    etiqueta.textContent = "Construye este patrón:";
+    elTablero.appendChild(etiqueta);
+    elTablero.appendChild(codigoAFichas(codigo, false));
+
+    const leyenda = document.createElement("div");
+    leyenda.className = "leyenda-claves";
+    rolesDistintos(codigo).forEach(r => {
+      const item = document.createElement("div");
+      item.className = "clave-item";
+      item.appendChild(fichaLetra(r));
+      const span = document.createElement("span");
+      span.textContent = "= " + mapa[r];
+      span.style.fontSize = "1.5rem";
+      item.appendChild(span);
+      leyenda.appendChild(item);
+    });
+    elTablero.appendChild(leyenda);
+
+    const tiraSlots = document.createElement("div");
+    tiraSlots.className = "tira-secuencia";
+    tiraSlots.id = "tiraSlots";
+    construirObjetivo.forEach(() => {
+      const hueco = document.createElement("div");
+      hueco.className = "ficha-emoji hueco";
+      hueco.textContent = "";
+      tiraSlots.appendChild(hueco);
+    });
+    elTablero.appendChild(tiraSlots);
+
+    const paleta = document.createElement("div");
+    paleta.className = "opciones-fila";
+    rolesDistintos(codigo).forEach(r => {
+      const btn = document.createElement("button");
+      btn.className = "btn-opcion";
+      btn.style.fontSize = "2rem";
+      btn.textContent = mapa[r];
+      btn.addEventListener("click", () => tocarPaleta(r));
+      paleta.appendChild(btn);
+    });
+    elTablero.appendChild(paleta);
+
+    const btnReiniciar = document.createElement("button");
+    btnReiniciar.className = "btn-chip";
+    btnReiniciar.textContent = "↺ Borrar";
+    btnReiniciar.type = "button";
+    btnReiniciar.addEventListener("click", () => {
+      construirRespuesta = [];
+      actualizarSlots();
+    });
+    elTablero.appendChild(btnReiniciar);
+  }
+
+  function actualizarSlots() {
+    const slots = document.querySelectorAll("#tiraSlots .ficha-emoji");
+    slots.forEach((slot, i) => {
+      if (i < construirRespuesta.length) {
+        const r = construirRespuesta[i];
+        slot.textContent = construirMapa[r];
+        slot.className = `ficha-emoji rol-${r.toLowerCase()}`;
+      } else {
+        slot.textContent = "";
+        slot.className = "ficha-emoji hueco";
+      }
+    });
+  }
+
+  function tocarPaleta(rol) {
+    if (construirRespuesta.length >= construirObjetivo.length) return;
+    construirRespuesta.push(rol);
+    actualizarSlots();
+    if (construirRespuesta.length === construirObjetivo.length) {
+      const correcto = construirRespuesta.every((r, i) => r === construirObjetivo[i]);
+      document.querySelectorAll("#tablero .btn-opcion").forEach(b => b.disabled = true);
+      if (correcto) {
+        mostrarExito();
+      } else {
+        mostrarAnimo("Esa combinación no calza. ¡Mira el código e inténtalo otra vez! 💪");
+      }
+      elBtnSiguiente.hidden = false;
+    }
+  }
+
+  // ------------------------------------------------
+  // Control general
+  // ------------------------------------------------
+  function nuevaRonda() {
+    limpiarMensaje();
+    elBtnSiguiente.hidden = true;
+    if (modoActual === "siguiente") rondaSiguiente();
+    else if (modoActual === "nombrar") rondaNombrar();
+    else rondaConstruir();
+  }
+
+  document.querySelectorAll("#selectorNivel .btn-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#selectorNivel .btn-chip").forEach(b => b.classList.remove("activo"));
+      btn.classList.add("activo");
+      nivelActual = Number(btn.dataset.nivel);
+      nuevaRonda();
+    });
+  });
+
+  document.querySelectorAll("#selectorModo .btn-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#selectorModo .btn-chip").forEach(b => b.classList.remove("activo"));
+      btn.classList.add("activo");
+      modoActual = btn.dataset.modo;
+      elSubtitulo.textContent = SUBTITULOS[modoActual];
+      nuevaRonda();
+    });
+  });
+
+  document.getElementById("btnSiguienteRonda").addEventListener("click", nuevaRonda);
+
+  document.getElementById("btnEscuchar").addEventListener("click", () => {
+    hablar(SUBTITULOS[modoActual]);
+  });
+
+  // estado inicial
+  document.querySelector('#selectorNivel .btn-chip[data-nivel="1"]').classList.add("activo");
+  document.querySelector('#selectorModo .btn-chip[data-modo="siguiente"]').classList.add("activo");
+  nuevaRonda();
+  </script>
+</body>
+</html>

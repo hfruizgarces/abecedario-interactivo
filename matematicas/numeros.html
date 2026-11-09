@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#AEE6FF">
+<title>Reconoce los Números - Matemáticas Interactivas</title>
+<link rel="stylesheet" href="estilo-mate.css">
+<style>
+  .grupo-objetos.chico { grid-template-columns: repeat(5, 1fr); max-width: 220px; padding: 10px; }
+  .grupo-objetos.chico .objeto { font-size: clamp(1rem, 3.6vw, 1.3rem); }
+  .btn-opcion.cluster { flex-direction: column; padding: 10px; }
+  .numeral-grande {
+    font-size: clamp(3.5rem, 16vw, 6rem); font-weight: bold; color: var(--celeste-fuerte);
+    text-shadow: 3px 3px 0 rgba(255,255,255,0.8), 5px 5px 0 rgba(var(--sombra-tinta),0.14);
+  }
+</style>
+</head>
+<body>
+
+  <div class="fondo-decorativo" aria-hidden="true">
+    <div class="nube nube1"></div>
+    <div class="nube nube2"></div>
+    <div class="nube nube3"></div>
+    <div class="estrella estrella1">⭐</div>
+    <div class="estrella estrella2">✨</div>
+    <div class="estrella estrella3">⭐</div>
+    <div class="forma forma1"></div>
+    <div class="forma forma2"></div>
+    <div class="forma forma3"></div>
+  </div>
+
+  <header class="barra-superior">
+    <a href="index.html" class="btn-superior" style="text-decoration:none; display:inline-block;">🏠 Matemáticas</a>
+    <button id="btnEscuchar" class="btn-superior" type="button">🔊 Escuchar</button>
+  </header>
+
+  <main class="pantalla">
+    <span class="etiqueta-eyebrow">🔢 Reconoce los Números</span>
+    <h1 class="titulo-juego">¿Cuántos hay?</h1>
+    <p class="subtitulo-juego" id="subtituloModo">Cuenta con cuidado y elige el número correcto.</p>
+
+    <div class="selector-fila" id="selectorNivel">
+      <button class="btn-chip chip-celeste" data-nivel="1" type="button">Hasta 10</button>
+      <button class="btn-chip chip-celeste" data-nivel="2" type="button">Hasta 20</button>
+      <button class="btn-chip chip-celeste" data-nivel="3" type="button">Hasta 40</button>
+    </div>
+
+    <div class="selector-fila" id="selectorModo">
+      <button class="btn-chip chip-naranjo" data-modo="contar" type="button">Cuenta y elige el número</button>
+      <button class="btn-chip chip-naranjo" data-modo="cantidad" type="button">Elige la cantidad</button>
+    </div>
+
+    <div class="panel-puntaje">⭐ <span id="puntaje">0</span> aciertos</div>
+
+    <div class="tablero" id="tablero"></div>
+
+    <div id="mensajeFeedback" class="mensaje-feedback"></div>
+
+    <button id="btnSiguienteRonda" class="btn-grande" type="button" hidden>Siguiente ➜</button>
+
+    <p class="pie-pagina">Educadora Fabiola Basualto — Recursos Interactivos</p>
+  </main>
+
+  <script src="comun.js"></script>
+  <script>
+  const RANGOS = { 1: [1, 10], 2: [11, 20], 3: [21, 40] };
+  const OBJETOS = ["⭐", "🔵", "🍓", "🐾", "🌼", "🎈", "🧸", "🍬"];
+
+  let nivelActual = 1;
+  let modoActual = "contar";
+  let puntaje = 0;
+
+  const elTablero = document.getElementById("tablero");
+  const elMensaje = document.getElementById("mensajeFeedback");
+  const elPuntaje = document.getElementById("puntaje");
+  const elBtnSiguiente = document.getElementById("btnSiguienteRonda");
+  const elSubtitulo = document.getElementById("subtituloModo");
+
+  const SUBTITULOS = {
+    contar: "Cuenta con cuidado y elige el número correcto.",
+    cantidad: "Mira el número y elige el grupo que tiene esa cantidad."
+  };
+
+  function limpiarMensaje() {
+    elMensaje.textContent = "";
+    elMensaje.className = "mensaje-feedback";
+  }
+  function mostrarExito() {
+    elMensaje.textContent = fraseExito();
+    elMensaje.className = "mensaje-feedback exito";
+    tonoAcierto();
+    confeti();
+    puntaje++;
+    elPuntaje.textContent = puntaje;
+  }
+  function mostrarAnimo() {
+    elMensaje.textContent = fraseAnimo();
+    elMensaje.className = "mensaje-feedback animo";
+    tonoError();
+  }
+
+  function grupoObjetos(cantidad, emoji, chico = false) {
+    const cont = document.createElement("div");
+    cont.className = "grupo-objetos" + (chico ? " chico" : "");
+    for (let i = 0; i < cantidad; i++) {
+      const span = document.createElement("span");
+      span.className = "objeto";
+      span.textContent = emoji;
+      span.style.animationDelay = Math.min(i * 0.02, 0.5) + "s";
+      cont.appendChild(span);
+    }
+    return cont;
+  }
+
+  function numerosDistractores(correcto, min, max, cuantos) {
+    const set = new Set([correcto]);
+    let intentos = 0;
+    while (set.size < cuantos + 1 && intentos < 200) {
+      intentos++;
+      const delta = enteroAlAzar(-5, 5);
+      const candidato = correcto + delta;
+      if (candidato >= min && candidato <= max) set.add(candidato);
+    }
+    while (set.size < cuantos + 1) {
+      const candidato = enteroAlAzar(min, max);
+      set.add(candidato);
+    }
+    return [...set];
+  }
+
+  // ------------------------------------------------
+  // MODO 1: Cuenta y elige el número
+  // ------------------------------------------------
+  function rondaContar() {
+    const [min, max] = RANGOS[nivelActual];
+    const cantidad = enteroAlAzar(min, max);
+    const emoji = elegirAlAzar(OBJETOS);
+
+    elTablero.innerHTML = "";
+    elTablero.appendChild(grupoObjetos(cantidad, emoji));
+
+    const pregunta = document.createElement("p");
+    pregunta.style.fontWeight = "bold";
+    pregunta.textContent = "¿Cuántos " + nombreObjeto(emoji) + " hay?";
+    elTablero.appendChild(pregunta);
+
+    const opciones = barajar(numerosDistractores(cantidad, min, max, 2));
+
+    const fila = document.createElement("div");
+    fila.className = "opciones-fila";
+    opciones.forEach(n => {
+      const btn = document.createElement("button");
+      btn.className = "btn-opcion";
+      btn.textContent = n;
+      btn.addEventListener("click", () => evaluarRespuesta(btn, n === cantidad, cantidad));
+      fila.appendChild(btn);
+    });
+    elTablero.appendChild(fila);
+  }
+
+  function nombreObjeto(emoji) {
+    const NOMBRES = { "⭐": "estrellas", "🔵": "círculos", "🍓": "fresas", "🐾": "huellitas", "🌼": "flores", "🎈": "globos", "🧸": "osos", "🍬": "dulces" };
+    return NOMBRES[emoji] || "elementos";
+  }
+
+  // ------------------------------------------------
+  // MODO 2: Elige la cantidad
+  // ------------------------------------------------
+  function rondaCantidad() {
+    const [min, max] = RANGOS[nivelActual];
+    const cantidad = enteroAlAzar(min, max);
+    const emoji = elegirAlAzar(OBJETOS);
+    const opciones = barajar(numerosDistractores(cantidad, min, max, 2));
+
+    elTablero.innerHTML = "";
+    const numeralDiv = document.createElement("div");
+    numeralDiv.className = "numeral-grande";
+    numeralDiv.textContent = cantidad;
+    elTablero.appendChild(numeralDiv);
+
+    const pregunta = document.createElement("p");
+    pregunta.style.fontWeight = "bold";
+    pregunta.textContent = "¿Qué grupo tiene " + cantidad + "?";
+    elTablero.appendChild(pregunta);
+
+    const fila = document.createElement("div");
+    fila.className = "opciones-fila";
+    opciones.forEach(n => {
+      const btn = document.createElement("button");
+      btn.className = "btn-opcion cluster";
+      btn.appendChild(grupoObjetos(n, emoji, true));
+      btn.addEventListener("click", () => evaluarRespuesta(btn, n === cantidad, cantidad));
+      fila.appendChild(btn);
+    });
+    elTablero.appendChild(fila);
+  }
+
+  function evaluarRespuesta(btn, esCorrecta, cantidadCorrecta) {
+    document.querySelectorAll(".btn-opcion").forEach(b => b.disabled = true);
+    if (esCorrecta) {
+      btn.classList.add("correcta");
+      mostrarExito();
+      hablar(String(cantidadCorrecta));
+    } else {
+      btn.classList.add("incorrecta");
+      mostrarAnimo();
+    }
+    elBtnSiguiente.hidden = false;
+  }
+
+  function nuevaRonda() {
+    limpiarMensaje();
+    elBtnSiguiente.hidden = true;
+    if (modoActual === "contar") rondaContar();
+    else rondaCantidad();
+  }
+
+  document.querySelectorAll("#selectorNivel .btn-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#selectorNivel .btn-chip").forEach(b => b.classList.remove("activo"));
+      btn.classList.add("activo");
+      nivelActual = Number(btn.dataset.nivel);
+      nuevaRonda();
+    });
+  });
+
+  document.querySelectorAll("#selectorModo .btn-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#selectorModo .btn-chip").forEach(b => b.classList.remove("activo"));
+      btn.classList.add("activo");
+      modoActual = btn.dataset.modo;
+      elSubtitulo.textContent = SUBTITULOS[modoActual];
+      nuevaRonda();
+    });
+  });
+
+  document.getElementById("btnSiguienteRonda").addEventListener("click", nuevaRonda);
+  document.getElementById("btnEscuchar").addEventListener("click", () => hablar(SUBTITULOS[modoActual]));
+
+  document.querySelector('#selectorNivel .btn-chip[data-nivel="1"]').classList.add("activo");
+  document.querySelector('#selectorModo .btn-chip[data-modo="contar"]').classList.add("activo");
+  nuevaRonda();
+  </script>
+</body>
+</html>
